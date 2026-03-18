@@ -135,6 +135,37 @@ CREATE POLICY "Users can insert own activities"
 CREATE POLICY "Users can delete own activities"
   ON activities FOR DELETE
   USING (auth.uid() = user_id);
+
+-- Activity points inherit access control from parent activity
+CREATE POLICY "Users can view own activity points"
+  ON activity_points FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM activities
+      WHERE activities.id = activity_points.activity_id
+      AND activities.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can insert own activity points"
+  ON activity_points FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM activities
+      WHERE activities.id = activity_points.activity_id
+      AND activities.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can delete own activity points"
+  ON activity_points FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM activities
+      WHERE activities.id = activity_points.activity_id
+      AND activities.user_id = auth.uid()
+    )
+  );
 ```
 
 ### Zustand Stores
@@ -179,10 +210,18 @@ interface MapState {
 
 **Goal:** User can import a GPX file and see it displayed on a MapLibre map. No auth, no persistence.
 
+**GPX Import Mechanism:**
+- **File picker only** - User taps a floating "Import GPX" button on the map screen
+- Opens native file picker (Expo DocumentPicker)
+- User selects `.gpx` file from device storage
+- File is parsed immediately, trace displayed on map
+- **File size limit:** 50MB maximum (triggers `FILE_TOO_LARGE` error if exceeded)
+
 **Components:**
 - `app/index.tsx` - Main map screen (full-screen MapLibre)
 - `components/map/TerrainMap.tsx` - MapLibre wrapper with terrain tiles
 - `components/map/TraceLayer.tsx` - GeoJSON source + line layer for GPX trace
+- `components/ui/ImportButton.tsx` - Floating action button to trigger file picker
 - `services/gpxParser.ts` - Parse GPX → GeoJSON + stats
 - `stores/mapStore.ts` - Viewport state (no auth yet)
 
@@ -217,13 +256,19 @@ interface ParsedActivity {
 
 **Goal:** User can tap a trace and see full activity details with stats and charts.
 
+**Data Flow (pre-Slice 3 persistence):**
+- Slice 2 stores parsed GPX data in `mapStore` (in-memory Zustand store)
+- When user taps a trace, `selectedActivityId` is set in the store
+- Navigation to `/activity/[id]` reads from the store
+- **Note:** This in-memory approach is intentional for Slice 2. Slice 3 will refactor to use Supabase persistence, but the component interfaces remain the same.
+
 **Components:**
 - `app/index.tsx` - Map screen with tap handling
 - `app/activity/[id].tsx` - Activity detail screen
 - `components/activity/ActivityDetail.tsx` - Main detail component
 - `components/activity/StatsBar.tsx` - Horizontal stats strip
 - `components/activity/ElevationChart.tsx` - Victory elevation profile
-- `hooks/useActivity.ts` - Fetch from in-memory cache
+- `hooks/useActivity.ts` - Fetch from mapStore (in-memory for Slice 2, Supabase for Slice 3)
 
 **Stats Displayed:**
 - Distance (km/mi)
@@ -234,7 +279,12 @@ interface ParsedActivity {
 - Date & time
 - **Elevation profile chart** (Victory line chart)
 - **Speed chart** (Victory line chart over time)
-- **Heart rate zones** (Victory bar chart: 50-60%, 60-70%, 70-80%, 80-90%, 90-100%)
+- **Heart rate zones** (Victory bar chart with following zones and colors):
+  - Zone 1 (50-60%): Light blue `#60A5FA`
+  - Zone 2 (60-70%): Blue `#3B82F6`
+  - Zone 3 (70-80%): Yellow `#FBBF24`
+  - Zone 4 (80-90%): Orange `#F97316`
+  - Zone 5 (90-100%): Red `#EF4444`
 
 **Tests:**
 - `ActivityDetail.test.tsx` - Renders all stats, elevation chart min/max, speed interpolation, HR zones
@@ -245,6 +295,16 @@ interface ParsedActivity {
 ### Slice 3: Auth + Persistence
 
 **Goal:** Add Supabase authentication and persist activities to database.
+
+**Prerequisites:**
+- **Supabase Project:** Create project at supabase.com, note project URL and anon key
+- **Google OAuth Setup:**
+  1. Create Google Cloud project
+  2. Enable Google+ API
+  3. Create OAuth 2.0 credentials (Web application type)
+  4. Add authorized redirect URI: `https://[YOUR_SUPABASE_PROJECT_ID].supabase.co/auth/v1/callback`
+  5. Enable Google sign-in in Supabase Dashboard → Authentication → Providers → Google
+  6. Paste Google Client ID and Secret into Supabase
 
 **Components:**
 - `app/(auth)/sign-in.tsx` - Email/password sign in
@@ -401,10 +461,18 @@ Onboarding
 
 MVP is complete when:
 - [ ] User can sign up/in with email or Google
-- [ ] User can import a GPX file
+- [ ] User can import a GPX file (up to 50MB)
 - [ ] Imported trace appears on the map
 - [ ] User can tap trace to see detail screen
 - [ ] Detail shows all stats + 3 charts (elevation, speed, HR zones)
 - [ ] Date filtering works (last 7/30/90 days, all time, custom)
-- [ ] All tests pass (100% coverage on critical paths)
+- [ ] All tests pass (see "Critical Paths" definition below)
 - [ ] Error handling graceful (no crashes)
+
+**Critical Paths (required test coverage):**
+1. **Auth flow** - Sign up, sign in, Google OAuth, sign out, session persistence
+2. **GPX import** - File picker, parsing valid GPX, error handling (invalid file, too large)
+3. **Map display** - Map renders, trace displays, tap handling, viewport persistence
+4. **Activity detail** - All stats render correctly, all 3 charts render with correct data
+5. **Data persistence** - Create activity, fetch activities, RLS isolation verified
+6. **Date filtering** - Filter by preset ranges, custom range, empty results handled
