@@ -31,6 +31,29 @@
 | GPX Parsing | **fast-xml-parser** | Custom parsing logic, full control over GPX interpretation |
 | Testing | **Jest + React Native Testing Library** | Full test coverage on critical paths |
 
+### UI Color Scheme
+
+**Primary colors (orange and white theme):**
+- Primary orange: `#F97316`
+- Light orange: `#FB923C`
+- Dark orange: `#EA580C`
+- White: `#FFFFFF`
+- Off-white (backgrounds): `#F9FAFB`
+- Light gray (borders): `#E5E7EB`
+- Dark gray (text): `#1F2937`
+
+**Heart rate zones:**
+- Zone 1 (50-60%): Gray `#9CA3AF`
+- Zone 2 (60-70%): Light blue `#60A5FA`
+- Zone 3 (70-80%): Green `#10B981`
+- Zone 4 (80-90%): Yellow-orange `#F59E0B`
+- Zone 5 (90-100%): Red `#EF4444`
+
+**Trace altitude gradient:**
+- Low altitude: Blue `#3B82F6`
+- Medium altitude: Orange `#F97316`
+- High altitude: Red `#EF4444`
+
 ### Project Structure
 
 ```
@@ -280,10 +303,10 @@ interface ParsedActivity {
 - **Elevation profile chart** (Victory line chart)
 - **Speed chart** (Victory line chart over time)
 - **Heart rate zones** (Victory bar chart with following zones and colors):
-  - Zone 1 (50-60%): Light blue `#60A5FA`
-  - Zone 2 (60-70%): Blue `#3B82F6`
-  - Zone 3 (70-80%): Yellow `#FBBF24`
-  - Zone 4 (80-90%): Orange `#F97316`
+  - Zone 1 (50-60%): Gray `#9CA3AF`
+  - Zone 2 (60-70%): Light blue `#60A5FA`
+  - Zone 3 (70-80%): Green `#10B981`
+  - Zone 4 (80-90%): Yellow-orange `#F59E0B`
   - Zone 5 (90-100%): Red `#EF4444`
 
 **Tests:**
