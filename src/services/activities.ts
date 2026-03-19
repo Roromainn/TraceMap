@@ -151,29 +151,42 @@ export async function getActivities(
   userId: string,
   dateRange?: { start: Date; end: Date }
 ): Promise<ActivityWithPoints[]> {
-  let query = supabase
+  // Supabase limits nested relations to 1000 by default
+  // We need to fetch activity_points separately to avoid this limit
+  const { data: activities, error: activitiesError } = await supabase
     .from('activities')
-    .select('*, activity_points(*)')
+    .select('*')
     .eq('user_id', userId)
     .order('started_at', { ascending: false });
 
-  if (dateRange) {
-    query = query
-      .gte('started_at', dateRange.start.toISOString())
-      .lte('started_at', dateRange.end.toISOString());
-  }
+  if (activitiesError) throw activitiesError;
+  if (!activities || activities.length === 0) return [];
 
-  const { data, error } = await query;
+  // Fetch points for each activity separately (avoids 1000 limit)
+  const activitiesWithPoints = await Promise.all(
+    activities.map(async (activity) => {
+      const { data: points, error: pointsError } = await supabase
+        .from('activity_points')
+        .select('*', { count: 'exact' })
+        .eq('activity_id', activity.id)
+        .order('seq', { ascending: true })
+        .limit(10000); // Increase limit to handle large activities
 
-  if (error) throw error;
-  
-  // Sort activity_points by seq manually
-  const sortedData = (data || []).map((activity) => ({
-    ...activity,
-    activity_points: (activity.activity_points || []).sort((a, b) => a.seq - b.seq),
-  }));
-  
-  return sortedData as ActivityWithPoints[];
+      if (pointsError) {
+        console.error('Error loading points for activity', activity.id, pointsError);
+        return { ...activity, activity_points: [] };
+      }
+
+      return { ...activity, activity_points: points || [] };
+    })
+  );
+
+  console.log('[getActivities] Loaded', activitiesWithPoints.length, 'activities');
+  activitiesWithPoints.forEach((a, i) => {
+    console.log(`  Activity ${i+1}: ${a.title} - ${a.activity_points?.length || 0} points`);
+  });
+
+  return activitiesWithPoints as ActivityWithPoints[];
 }
 
 export async function getActivityById(
