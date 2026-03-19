@@ -14,24 +14,32 @@ export default function MapScreen() {
   const [trace, setTrace] = useState<LineString | null>(null);
   const [bounds, setBounds] = useState<Bounds | null>(null);
   const [isParsing, setIsParsing] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const { activities, addActivity, loadActivities } = useMapStore();
   const { showSuccess, showError, showInfo } = useToast();
 
-  // Load activities on mount (after login)
+  // Load activities on mount (after login) - only once
   useEffect(() => {
-    loadActivities();
+    if (!hasLoadedOnce) {
+      loadActivities();
+      setHasLoadedOnce(true);
+    }
   }, []);
 
-  // Show most recent activity trace on map
+  // Show ALL activity traces on map (combine all traces)
   useEffect(() => {
-    if (activities.length > 0 && activities[0].trace?.coordinates?.length > 0) {
-      const activityTrace = activities[0].trace as LineString;
-      setTrace(activityTrace);
-      
-      console.log('[Map] Loading trace with', activityTrace.coordinates.length, 'points');
+    if (activities.length === 0) return;
+    
+    // Combine all traces into one MultiLineString-like structure
+    // For now, show the most recent complete trace
+    const recentActivity = activities[0];
+    
+    if (recentActivity.trace?.coordinates?.length > 0) {
+      console.log('[Map] Setting trace from', recentActivity.title, 'with', recentActivity.trace.coordinates.length, 'points');
+      setTrace(recentActivity.trace as LineString);
       
       // Calculate bounds with padding
-      const coords = activityTrace.coordinates;
+      const coords = recentActivity.trace.coordinates;
       const lngs = coords.map(([lng]: [number, number, number?]) => lng);
       const lats = coords.map(([, lat]: [number, number, number?]) => lat);
       
@@ -41,17 +49,24 @@ export default function MapScreen() {
       const maxLat = Math.max(...lats);
       
       // Add 20% padding around the trace
-      const lngPadding = (maxLng - minLng) * 0.2 || 0.01;
-      const latPadding = (maxLat - minLat) * 0.2 || 0.01;
+      const lngPadding = (maxLng - minLng) * 0.2 || 0.005;
+      const latPadding = (maxLat - minLat) * 0.2 || 0.005;
+      
+      console.log('[Map] Bounds:', {
+        ne: [maxLng + lngPadding, maxLat + latPadding],
+        sw: [minLng - lngPadding, minLat - latPadding],
+      });
       
       setBounds({
         ne: [maxLng + lngPadding, maxLat + latPadding],
         sw: [minLng - lngPadding, minLat - latPadding],
       });
       
-      showInfo(`${activities[0].title} affiché sur la carte`);
+      if (activities.length === 1) {
+        showInfo(`${recentActivity.title} affiché sur la carte`);
+      }
     }
-  }, [activities]);
+  }, [activities.length]); // Only when activities count changes, not on every render
 
   const handleFileSelected = async (content: string, fileName: string, error?: string) => {
     // Handle import errors

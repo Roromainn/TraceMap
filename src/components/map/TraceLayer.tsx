@@ -10,7 +10,7 @@ interface TraceLayerProps {
 export function TraceLayer({ trace }: TraceLayerProps) {
   const sourceId = 'trace-source';
   const layerId = 'trace-layer';
-  
+
   const geojson: FeatureCollection = useMemo(() => ({
     type: 'FeatureCollection',
     features: [
@@ -21,16 +21,29 @@ export function TraceLayer({ trace }: TraceLayerProps) {
       } as Feature,
     ],
   }), [trace]);
-  
+
   return (
     <>
       <MapLibreGL.ShapeSource
         id={sourceId}
         shape={geojson}
+        lineMetrics={true} // Enable for gradient styling
       >
+        {/* Outer glow layer (wider, semi-transparent) */}
+        <MapLibreGL.LineLayer
+          id={`${layerId}-glow`}
+          style={{
+            lineColor: colors.primary,
+            lineWidth: 8,
+            lineOpacity: 0.3,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }}
+        />
+        
+        {/* Main trace layer */}
         <MapLibreGL.LineLayer
           id={layerId}
-          testID="trace-layer"
           style={{
             lineColor: colors.primary,
             lineWidth: 4,
