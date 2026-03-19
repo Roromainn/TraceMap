@@ -5,7 +5,16 @@ import { useMapStore } from '../../stores/mapStore';
 import { TraceLayer } from './TraceLayer';
 
 const MAPTILER_TOKEN = process.env.EXPO_PUBLIC_MAPTILER_TOKEN;
-const MAP_STYLE_URL = `https://api.maptiler.com/maps/outdoor/style.json?key=${MAPTILER_TOKEN}`;
+
+// Use outdoor style with terrain support
+const MAP_STYLE_URL = `https://api.maptiler.com/maps/outdoor-v2/style.json?key=${MAPTILER_TOKEN}`;
+
+// Terrain source for elevation data (DEM)
+const TERRAIN_SOURCE = {
+  type: 'raster-dem' as const,
+  tiles: [`https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_TOKEN}`],
+  tileSize: 256,
+};
 
 interface TraceBounds {
   ne: [number, number]; // [lng, lat]
@@ -15,16 +24,32 @@ interface TraceBounds {
 interface TerrainMapProps {
   traces?: LineString[]; // Multiple traces
   bounds?: TraceBounds | null;
+  enable3D?: boolean; // Enable 3D terrain
 }
 
-export function TerrainMap({ traces = [], bounds }: TerrainMapProps) {
+export function TerrainMap({ traces = [], bounds, enable3D = false }: TerrainMapProps) {
   const { viewport } = useMapStore();
 
   return (
     <MapLibreGL.MapView
       style={{ flex: 1 }}
       mapStyle={MAP_STYLE_URL}
+      styleURL={MAP_STYLE_URL}
     >
+      {/* Terrain source for 3D elevation */}
+      {enable3D && (
+        <>
+          <MapLibreGL.RasterDemSource
+            id="terrain-source"
+            {...TERRAIN_SOURCE}
+          />
+          <MapLibreGL.Terrain
+            sourceID="terrain-source"
+            exaggeration={1.5} // Vertical exaggeration for visibility
+          />
+        </>
+      )}
+      
       {bounds ? (
         <MapLibreGL.Camera
           bounds={{

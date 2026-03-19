@@ -15,6 +15,7 @@ export default function MapScreen() {
   const [bounds, setBounds] = useState<Bounds | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [enable3D, setEnable3D] = useState(false);
   const { activities, addActivity, loadActivities } = useMapStore();
   const { showSuccess, showError, showInfo } = useToast();
 
@@ -106,13 +107,25 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <TerrainMap traces={traces} bounds={bounds} />
+      <TerrainMap traces={traces} bounds={bounds} enable3D={enable3D} />
       {isParsing && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       )}
       <ImportButton onFileSelected={handleFileSelected} disabled={isParsing} />
+      
+      {/* 3D Toggle Button */}
+      <TouchableOpacity
+        style={[styles.btn3D, enable3D && styles.btn3DActive]}
+        onPress={() => {
+          setEnable3D(!enable3D);
+          showInfo(enable3D ? 'Mode 2D activé' : 'Mode 3D activé');
+        }}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.btn3DText}>{enable3D ? '🏔️ 3D' : '🗺️ 2D'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -127,5 +140,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
+  },
+  btn3D: {
+    position: 'absolute',
+    top: 50,
+    right: 16,
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: colors.lightGray,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  btn3DActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  btn3DText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.darkGray,
   },
 });
