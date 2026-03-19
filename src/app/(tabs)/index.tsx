@@ -11,7 +11,7 @@ import { LineString } from 'geojson';
 type Bounds = { ne: [number, number]; sw: [number, number] };
 
 export default function MapScreen() {
-  const [trace, setTrace] = useState<LineString | null>(null);
+  const [traces, setTraces] = useState<LineString[]>([]);
   const [bounds, setBounds] = useState<Bounds | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -26,47 +26,41 @@ export default function MapScreen() {
     }
   }, []);
 
-  // Show ALL activity traces on map (combine all traces)
+  // Show ALL activity traces on map
   useEffect(() => {
     if (activities.length === 0) return;
     
-    // Combine all traces into one MultiLineString-like structure
-    // For now, show the most recent complete trace
-    const recentActivity = activities[0];
+    // Collect all traces
+    const allTraces = activities
+      .filter((a) => a.trace?.coordinates?.length > 0)
+      .map((a) => a.trace as LineString);
     
-    if (recentActivity.trace?.coordinates?.length > 0) {
-      console.log('[Map] Setting trace from', recentActivity.title, 'with', recentActivity.trace.coordinates.length, 'points');
-      setTrace(recentActivity.trace as LineString);
+    if (allTraces.length > 0) {
+      console.log('[Map] Displaying', allTraces.length, 'activities with traces');
+      setTraces(allTraces);
       
-      // Calculate bounds with padding
-      const coords = recentActivity.trace.coordinates;
-      const lngs = coords.map(([lng]: [number, number, number?]) => lng);
-      const lats = coords.map(([, lat]: [number, number, number?]) => lat);
+      // Calculate bounds to fit ALL traces
+      const allCoords = allTraces.flatMap((t) => t.coordinates);
+      const lngs = allCoords.map(([lng]: [number, number, number?]) => lng);
+      const lats = allCoords.map(([, lat]: [number, number, number?]) => lat);
       
       const minLng = Math.min(...lngs);
       const maxLng = Math.max(...lngs);
       const minLat = Math.min(...lats);
       const maxLat = Math.max(...lats);
       
-      // Add 20% padding around the trace
+      // Add 20% padding around all traces
       const lngPadding = (maxLng - minLng) * 0.2 || 0.005;
       const latPadding = (maxLat - minLat) * 0.2 || 0.005;
-      
-      console.log('[Map] Bounds:', {
-        ne: [maxLng + lngPadding, maxLat + latPadding],
-        sw: [minLng - lngPadding, minLat - latPadding],
-      });
       
       setBounds({
         ne: [maxLng + lngPadding, maxLat + latPadding],
         sw: [minLng - lngPadding, minLat - latPadding],
       });
       
-      if (activities.length === 1) {
-        showInfo(`${recentActivity.title} affiché sur la carte`);
-      }
+      showInfo(`${activities.length} activités affichées sur la carte`);
     }
-  }, [activities.length]); // Only when activities count changes, not on every render
+  }, [activities.length]);
 
   const handleFileSelected = async (content: string, fileName: string, error?: string) => {
     // Handle import errors
@@ -83,7 +77,7 @@ export default function MapScreen() {
     setIsParsing(true);
     try {
       const parsed = await parseGPX(content);
-      setTrace(parsed.trace);
+      setTraces([parsed.trace]); // Show only the new trace during import
 
       // Calcul de la bounding box depuis les coordonnées GeoJSON [lng, lat, ?alt]
       const coords = parsed.trace.coordinates;
@@ -96,7 +90,7 @@ export default function MapScreen() {
 
       const title = fileName.replace(/\.gpx$/i, '');
       await addActivity(parsed, title, content); // Pass GPX content for upload
-      
+
       showSuccess(`${title} importé avec succès !`);
     } catch (error: any) {
       console.error('Error parsing GPX:', error);
@@ -108,7 +102,7 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <TerrainMap trace={trace} bounds={bounds} />
+      <TerrainMap traces={traces} bounds={bounds} />
       {isParsing && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.primary} />

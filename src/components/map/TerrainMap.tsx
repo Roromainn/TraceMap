@@ -13,11 +13,11 @@ interface TraceBounds {
 }
 
 interface TerrainMapProps {
-  trace?: LineString | null;
+  traces?: LineString[]; // Multiple traces
   bounds?: TraceBounds | null;
 }
 
-export function TerrainMap({ trace, bounds }: TerrainMapProps) {
+export function TerrainMap({ traces = [], bounds }: TerrainMapProps) {
   const { viewport } = useMapStore();
 
   return (
@@ -46,7 +46,10 @@ export function TerrainMap({ trace, bounds }: TerrainMapProps) {
           heading={viewport.bearing}
         />
       )}
-      {trace && <TraceLayer trace={trace} />}
+      {/* Render all traces */}
+      {traces.map((trace, index) => (
+        <TraceLayer key={`trace-${index}`} trace={trace} />
+      ))}
     </MapLibreGL.MapView>
   );
 }
