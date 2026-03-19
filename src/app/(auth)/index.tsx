@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signUpWithEmail, signInWithEmail, signInWithGoogle, getCurrentUser, signOut } from '../../services/activities';
 import { colors } from '../../utils/colors';
@@ -51,6 +52,8 @@ export default function AuthScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const { setSession } = useSessionStore();
 
@@ -227,14 +230,27 @@ export default function AuthScreen() {
           editable={!isLoading}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Mot de passe"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!isLoading}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={[styles.input, styles.passwordInput]}
+            placeholder="Mot de passe"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            editable={!isLoading}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.eyeButton}
+            disabled={isLoading}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off' : 'eye'}
+              size={20}
+              color="#9CA3AF"
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* Password strength indicator */}
         {isSignUp && password.length > 0 && (
@@ -274,14 +290,27 @@ export default function AuthScreen() {
         )}
 
         {isSignUp && (
-          <TextInput
-            style={styles.input}
-            placeholder="Confirmer le mot de passe"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            editable={!isLoading}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="Confirmer le mot de passe"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              editable={!isLoading}
+            />
+            <TouchableOpacity
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={styles.eyeButton}
+              disabled={isLoading}
+            >
+              <Ionicons
+                name={showConfirmPassword ? 'eye-off' : 'eye'}
+                size={20}
+                color="#9CA3AF"
+              />
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Password requirements */}
@@ -443,6 +472,19 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 16,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 44, // Space for eye icon
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    marginTop: -10,
+    padding: 4,
   },
   input: {
     backgroundColor: colors.white,
