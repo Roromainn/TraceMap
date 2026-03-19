@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { signUpWithEmail, signInWithEmail, signInWithGoogle, getCurrentUser } from '../../services/activities';
 import { colors } from '../../utils/colors';
+import { useSessionStore } from '../../stores/sessionStore';
 
 // Validation email simple
 function isValidEmail(email: string): boolean {
@@ -51,6 +52,7 @@ export default function AuthScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
   const router = useRouter();
+  const { setSession } = useSessionStore();
 
   const passwordStrength = getPasswordStrength(password);
 
@@ -63,6 +65,7 @@ export default function AuthScreen() {
     try {
       const user = await getCurrentUser();
       if (user) {
+        setSession({ user, session: user });
         setLoggedInUser(user.email);
         console.log('[Auth] User already logged in:', user.email);
       }
@@ -130,6 +133,7 @@ export default function AuthScreen() {
         if (error) throw error;
         
         if (data.user) {
+          setSession({ user: data.user, session: data.session });
           Alert.alert(
             '✅ Compte créé !',
             'Un email de confirmation a été envoyé. Vérifiez votre boîte mail.',
@@ -137,7 +141,9 @@ export default function AuthScreen() {
           );
         }
       } else {
-        await signInWithEmail(email, password);
+        const { data, error } = await signInWithEmail(email, password);
+        if (error) throw error;
+        setSession({ user: data.user, session: data.session });
         router.replace('/(tabs)');
       }
     } catch (error: any) {

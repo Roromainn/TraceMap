@@ -150,10 +150,10 @@ export async function createActivity(
 export async function getActivities(
   userId: string,
   dateRange?: { start: Date; end: Date }
-): Promise<Activity[]> {
+): Promise<ActivityWithPoints[]> {
   let query = supabase
     .from('activities')
-    .select('*')
+    .select('*, activity_points(*)')
     .eq('user_id', userId)
     .order('started_at', { ascending: false });
 
@@ -166,7 +166,7 @@ export async function getActivities(
   const { data, error } = await query;
 
   if (error) throw error;
-  return data || [];
+  return data as ActivityWithPoints[] || [];
 }
 
 export async function getActivityById(

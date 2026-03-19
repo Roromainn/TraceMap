@@ -127,22 +127,29 @@ export const useMapStore = create<MapState>((set, get) => ({
       
       console.log('[MapStore] Loaded', activities.length, 'activities from Supabase');
       
-      // Convert to StoredActivity format
+      // Convert to StoredActivity format with points
       const storedActivities = activities.map((a) => ({
         ...a,
         stats: {
           distance_m: a.distance_m,
-          elevation_m: a.elevation_m,
+          elevation_m: a.elevation_m || 0,
           duration_s: a.duration_s,
           avg_speed_ms: a.avg_speed_ms,
           avg_hr: a.avg_hr,
           started_at: new Date(a.started_at),
           type: a.type,
         },
-        points: [], // Will be loaded on demand when viewing detail
+        points: a.activity_points?.map((p: any) => ({
+          lat: p.lat,
+          lng: p.lng,
+          altitude_m: p.altitude_m,
+          speed_ms: p.speed_ms,
+          heart_rate: p.heart_rate,
+          timestamp: new Date(p.timestamp),
+        })) || [],
         trace: {
           type: 'LineString' as const,
-          coordinates: [], // Will be loaded on demand
+          coordinates: (a.activity_points || []).map((p: any) => [p.lng, p.lat, p.altitude_m]),
         },
       }));
       

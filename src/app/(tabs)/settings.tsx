@@ -18,6 +18,8 @@ export default function SettingsScreen() {
   const { user, signOut } = useSessionStore();
   const router = useRouter();
 
+  console.log('[Settings] user:', user?.email || 'null');
+
   const handleLogout = async () => {
     Alert.alert(
       'Déconnexion',
