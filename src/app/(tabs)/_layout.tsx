@@ -25,7 +25,11 @@ export default function TabsLayout() {
           borderTopColor: colors.lightGray,
           backgroundColor: colors.white,
         },
-        headerShown: false,
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: colors.white,
+        },
+        headerTintColor: colors.darkGray,
       }}
     >
       <Tabs.Screen

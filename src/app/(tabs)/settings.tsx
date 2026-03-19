@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { useSessionStore } from '../../stores/sessionStore';
 import { SpeedUnit, SPEED_UNIT_LABELS } from '../../utils/units';
 import { colors } from '../../utils/colors';
+import { useRouter } from 'expo-router';
 
 const SPEED_OPTIONS: { value: SpeedUnit; label: string; description: string }[] = [
   { value: 'min_km',   label: 'min/km',  description: 'Allure (course à pied, rando)' },
@@ -13,10 +15,45 @@ const SPEED_OPTIONS: { value: SpeedUnit; label: string; description: string }[] 
 
 export default function SettingsScreen() {
   const { speedUnit, setSpeedUnit } = useSettingsStore();
+  const { user, signOut } = useSessionStore();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Se déconnecter',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace('/(auth)');
+            } catch (error: any) {
+              Alert.alert('Erreur', error.message);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.pageTitle}>Paramètres</Text>
+
+      {/* User Info */}
+      {user && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Compte</Text>
+          <View style={styles.userCard}>
+            <Text style={styles.userEmail}>{user.email}</Text>
+            <Text style={styles.userId}>ID: {user.id.slice(0, 8)}...</Text>
+          </View>
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Unité de vitesse</Text>
@@ -57,6 +94,19 @@ export default function SettingsScreen() {
           </Text>
         </View>
       </View>
+
+      {/* Logout Button */}
+      {user && (
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.logoutButtonText}>🚪 Se déconnecter</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -147,6 +197,23 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: colors.primary,
   },
+  userCard: {
+    backgroundColor: colors.offWhite,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 4,
+  },
+  userEmail: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.darkGray,
+    marginBottom: 4,
+  },
+  userId: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontFamily: 'monospace',
+  },
   aboutCard: {
     backgroundColor: colors.offWhite,
     borderRadius: 8,
@@ -168,5 +235,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
     lineHeight: 18,
+  },
+  logoutButton: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#DC2626',
   },
 });

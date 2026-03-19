@@ -6,6 +6,7 @@ interface SessionState {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  setSession: (data: { user: User | null; session: Session | null }) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -16,6 +17,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   user: null,
   session: null,
   isLoading: true,
+  setSession: ({ user, session }) => set({ user, session, isLoading: false }),
   signIn: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -27,6 +29,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   signInWithGoogle: async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
+      redirectTo: 'tracemap://callback',
     });
     if (error) throw error;
   },
