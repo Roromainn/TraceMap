@@ -20,11 +20,6 @@ interface TerrainMapProps {
 export function TerrainMap({ traces = [], bounds }: TerrainMapProps) {
   const { viewport } = useMapStore();
 
-  console.log('[TerrainMap] Received', traces.length, 'traces to render');
-  traces.forEach((t, i) => {
-    console.log(`  Trace ${i}: ${t.coordinates.length} points`);
-  });
-
   return (
     <MapLibreGL.MapView
       style={{ flex: 1 }}
@@ -51,20 +46,26 @@ export function TerrainMap({ traces = [], bounds }: TerrainMapProps) {
           heading={viewport.bearing}
         />
       )}
-      {/* Render all traces with different colors */}
+      {/* Render all traces with different colors and unique IDs */}
       {traces.map((trace, index) => {
         // Different colors for each trace
         const traceColors = [
-          '#F97316', // Orange (primary)
-          '#3B82F6', // Blue
-          '#10B981', // Green
-          '#EF4444', // Red
-          '#8B5CF6', // Purple
+          '#F97316', // Orange (1ère activité)
+          '#3B82F6', // Bleue (2ème activité)
+          '#10B981', // Verte (3ème activité)
+          '#EF4444', // Rouge (4ème activité)
+          '#8B5CF6', // Violette (5ème activité)
+          '#F59E0B', // Jaune-orangé (6ème activité)
         ];
         const color = traceColors[index % traceColors.length];
         
         return (
-          <TraceLayer key={`trace-${index}`} trace={trace} color={color} />
+          <TraceLayer 
+            key={`trace-${index}`} 
+            trace={trace} 
+            color={color}
+            index={index}
+          />
         );
       })}
     </MapLibreGL.MapView>

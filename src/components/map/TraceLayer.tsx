@@ -6,14 +6,13 @@ import { colors } from '../../utils/colors';
 interface TraceLayerProps {
   trace: LineString;
   color?: string; // Optional custom color
+  index?: number; // For unique IDs
 }
 
-export function TraceLayer({ trace, color }: TraceLayerProps) {
-  const sourceId = 'trace-source';
-  const layerId = 'trace-layer';
+export function TraceLayer({ trace, color, index = 0 }: TraceLayerProps) {
+  const sourceId = `trace-source-${index}`;
+  const layerId = `trace-layer-${index}`;
   const traceColor = color || colors.primary;
-
-  console.log('[TraceLayer] Rendering trace with', trace.coordinates.length, 'points, color:', traceColor);
 
   const geojson: FeatureCollection = useMemo(() => ({
     type: 'FeatureCollection',
@@ -24,7 +23,7 @@ export function TraceLayer({ trace, color }: TraceLayerProps) {
         properties: {},
       } as Feature,
     ],
-  }), [trace]);
+  }), [trace, index]);
 
   return (
     <>
@@ -40,18 +39,6 @@ export function TraceLayer({ trace, color }: TraceLayerProps) {
             lineColor: '#FFFFFF',
             lineWidth: 6,
             lineOpacity: 0.9,
-            lineCap: 'round',
-            lineJoin: 'round',
-          }}
-        />
-        
-        {/* Outer glow layer (wider, semi-transparent) */}
-        <MapLibreGL.LineLayer
-          id={`${layerId}-glow`}
-          style={{
-            lineColor: traceColor,
-            lineWidth: 8,
-            lineOpacity: 0.3,
             lineCap: 'round',
             lineJoin: 'round',
           }}

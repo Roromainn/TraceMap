@@ -37,9 +37,9 @@ export default function MapScreen() {
     
     if (allTraces.length > 0) {
       console.log('[Map] Displaying', allTraces.length, 'activities with traces');
-      console.log('  Trace 0:', allTraces[0].coordinates.length, 'points');
-      console.log('  Trace 1:', allTraces[1]?.coordinates.length ?? 0, 'points');
-      console.log('  Setting traces state with', allTraces.length, 'items');
+      allTraces.forEach((t, i) => {
+        console.log(`  Activity ${i + 1}: ${t.coordinates.length} points`);
+      });
       
       setTraces(allTraces);
       
@@ -52,12 +52,6 @@ export default function MapScreen() {
       const maxLng = Math.max(...lngs);
       const minLat = Math.min(...lats);
       const maxLat = Math.max(...lats);
-      
-      console.log('[Map] Combined bounds:', {
-        minLng, maxLng, minLat, maxLat,
-        spanLng: maxLng - minLng,
-        spanLat: maxLat - minLat,
-      });
       
       // Add 20% padding around all traces
       const lngPadding = (maxLng - minLng) * 0.2 || 0.005;
