@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '../services/supabase';
 
 interface SessionState {
   user: User | null;
@@ -16,15 +17,30 @@ export const useSessionStore = create<SessionState>((set) => ({
   session: null,
   isLoading: true,
   signIn: async (email, password) => {
-    // TODO: Implement with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+    set({ user: data.user, session: data.session, isLoading: false });
   },
   signInWithGoogle: async () => {
-    // TODO: Implement with Supabase
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+    if (error) throw error;
   },
   signUp: async (email, password) => {
-    // TODO: Implement with Supabase
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) throw error;
+    set({ user: data.user, session: data.session, isLoading: false });
   },
   signOut: async () => {
-    // TODO: Implement with Supabase
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    set({ user: null, session: null, isLoading: false });
   },
 }));
