@@ -37,9 +37,10 @@ export default function MapScreen() {
     
     if (allTraces.length > 0) {
       console.log('[Map] Displaying', allTraces.length, 'activities with traces');
-      console.log('  Traces bounds:', allTraces.map((t, i) => 
-        `Trace ${i}: ${t.coordinates.length} points`
-      ));
+      console.log('  Trace 0:', allTraces[0].coordinates.length, 'points');
+      console.log('  Trace 1:', allTraces[1]?.coordinates.length ?? 0, 'points');
+      console.log('  Setting traces state with', allTraces.length, 'items');
+      
       setTraces(allTraces);
       
       // Calculate bounds to fit ALL traces

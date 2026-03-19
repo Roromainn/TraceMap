@@ -20,6 +20,11 @@ interface TerrainMapProps {
 export function TerrainMap({ traces = [], bounds }: TerrainMapProps) {
   const { viewport } = useMapStore();
 
+  console.log('[TerrainMap] Received', traces.length, 'traces to render');
+  traces.forEach((t, i) => {
+    console.log(`  Trace ${i}: ${t.coordinates.length} points`);
+  });
+
   return (
     <MapLibreGL.MapView
       style={{ flex: 1 }}

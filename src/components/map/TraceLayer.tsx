@@ -13,6 +13,8 @@ export function TraceLayer({ trace, color }: TraceLayerProps) {
   const layerId = 'trace-layer';
   const traceColor = color || colors.primary;
 
+  console.log('[TraceLayer] Rendering trace with', trace.coordinates.length, 'points, color:', traceColor);
+
   const geojson: FeatureCollection = useMemo(() => ({
     type: 'FeatureCollection',
     features: [
