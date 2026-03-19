@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signUpWithEmail, signInWithEmail, signInWithGoogle, getCurrentUser } from '../../services/activities';
+import { signUpWithEmail, signInWithEmail, signInWithGoogle, getCurrentUser, signOut } from '../../services/activities';
 import { colors } from '../../utils/colors';
 import { useSessionStore } from '../../stores/sessionStore';
 
@@ -110,13 +110,19 @@ export default function AuthScreen() {
       try {
         // Try to sign in, if user doesn't exist, create it
         try {
-          await signInWithEmail(email, password);
+          const { data } = await signInWithEmail(email, password);
+          setSession({ user: data.user, session: data.session });
+          setLoggedInUser(data.user.email);
+          Alert.alert('✅ Compte debug connecté', 'Bienvenue !');
+          router.replace('/(tabs)');
         } catch {
           // User doesn't exist, create it
-          await signUpWithEmail(email, password);
+          const { data } = await signUpWithEmail(email, password);
+          setSession({ user: data.user, session: data.session });
+          setLoggedInUser(data.user.email);
+          Alert.alert('✅ Compte debug créé', 'Bienvenue !');
+          router.replace('/(tabs)');
         }
-        Alert.alert('✅ Compte debug connecté', 'Bienvenue !');
-        router.replace('/(tabs)');
       } catch (error: any) {
         Alert.alert('Erreur', error.message);
       } finally {
@@ -178,12 +184,23 @@ export default function AuthScreen() {
         <View style={styles.loggedInBanner}>
           <Text style={styles.loggedInText}>✅ Connecté en tant que</Text>
           <Text style={styles.loggedInEmail}>{loggedInUser}</Text>
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={() => router.replace('/(tabs)')}
-          >
-            <Text style={styles.continueButtonText}>→ Continuer vers l'appli</Text>
-          </TouchableOpacity>
+          <View style={styles.bannerButtons}>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={() => router.replace('/(tabs)')}
+            >
+              <Text style={styles.continueButtonText}>→ Continuer vers l'appli</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.logoutSmallButton}
+              onPress={async () => {
+                await signOut();
+                setLoggedInUser(null);
+              }}
+            >
+              <Text style={styles.logoutSmallButtonText}>🚪 Logout</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -394,6 +411,24 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 15,
     fontWeight: '700',
+  },
+  bannerButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+  },
+  logoutSmallButton: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  logoutSmallButtonText: {
+    color: '#DC2626',
+    fontSize: 14,
+    fontWeight: '600',
   },
   form: {
     gap: 16,
