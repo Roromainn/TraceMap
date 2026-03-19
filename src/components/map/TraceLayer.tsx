@@ -33,6 +33,18 @@ export function TraceLayer({ trace, color }: TraceLayerProps) {
         shape={geojson}
         lineMetrics={true}
       >
+        {/* White outline layer for visibility */}
+        <MapLibreGL.LineLayer
+          id={`${layerId}-outline`}
+          style={{
+            lineColor: '#FFFFFF',
+            lineWidth: 6,
+            lineOpacity: 0.9,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }}
+        />
+        
         {/* Outer glow layer (wider, semi-transparent) */}
         <MapLibreGL.LineLayer
           id={`${layerId}-glow`}
