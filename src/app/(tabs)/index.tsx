@@ -28,7 +28,7 @@ export default function MapScreen() {
       });
 
       const title = fileName.replace(/\.gpx$/i, '');
-      addActivity(parsed, title);
+      await addActivity(parsed, title, content); // Pass GPX content for upload
     } catch (error) {
       console.error('Error parsing GPX:', error);
       alert('Impossible de lire le fichier GPX. Vérifiez que le fichier est valide.');

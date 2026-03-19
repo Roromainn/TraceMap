@@ -27,20 +27,43 @@ export interface ParsedActivity {
  * Supports: Garmin (ns3:hr in TrackPointExtension), gpxtpx:hr, and flat <hr> tags.
  */
 function extractHeartRate(pt: any): number | null {
+  if (!pt) return null;
+  
+  // Direct property access (parser with ignoreAttributes: false)
   const ext = pt.extensions;
   if (!ext) return null;
 
   // Garmin format: extensions > TrackPointExtension > ns3:hr
-  const tpe = ext['TrackPointExtension'];
+  // Try multiple possible keys (with/without namespace prefix)
+  const tpe = ext['TrackPointExtension'] 
+           ?? ext['ns3:TrackPointExtension']
+           ?? ext['gpxtpx:TrackPointExtension'];
+  
   if (tpe) {
     // Try all possible HR tag names
-    const hr = tpe['ns3:hr'] ?? tpe['gpxtpx:hr'] ?? tpe['hr'];
-    if (hr != null) return parseInt(String(hr), 10);
+    const hr = tpe['ns3:hr'] 
+            ?? tpe['gpxtpx:hr'] 
+            ?? tpe['hr']
+            ?? tpe['@_ns3:hr']
+            ?? tpe['@_hr'];
+    
+    if (hr != null) {
+      const parsed = parseInt(String(hr), 10);
+      return isNaN(parsed) ? null : parsed;
+    }
   }
 
   // Direct in extensions (some formats)
-  const hr = ext['ns3:hr'] ?? ext['gpxtpx:hr'] ?? ext['hr'];
-  if (hr != null) return parseInt(String(hr), 10);
+  const hr = ext['ns3:hr'] 
+          ?? ext['gpxtpx:hr'] 
+          ?? ext['hr']
+          ?? ext['@_ns3:hr']
+          ?? ext['@_hr'];
+  
+  if (hr != null) {
+    const parsed = parseInt(String(hr), 10);
+    return isNaN(parsed) ? null : parsed;
+  }
 
   return null;
 }
