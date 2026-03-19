@@ -1,12 +1,19 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMapStore } from '../../stores/mapStore';
+import { useToast } from '../../contexts/ToastContext';
 import { colors } from '../../utils/colors';
 
 export default function ActivitiesScreen() {
-  const { activities, setSelectedActivity } = useMapStore();
+  const { activities, setSelectedActivity, refresh } = useMapStore();
   const router = useRouter();
+  const { showInfo } = useToast();
+
+  const handleRefresh = async () => {
+    await refresh();
+    showInfo('Activités actualisées');
+  };
 
   const handleActivityPress = (id: string) => {
     setSelectedActivity(id);
@@ -28,9 +35,20 @@ export default function ActivitiesScreen() {
   if (activities.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyIcon}>🗺️</Text>
+        <View style={styles.emptyIllustration}>
+          <Text style={styles.emptyIcon}>🗺️</Text>
+          <Text style={styles.emptySubIcon}>📍</Text>
+        </View>
         <Text style={styles.emptyTitle}>Aucune activité</Text>
-        <Text style={styles.emptySubtitle}>Importez un fichier GPX depuis l'onglet Carte</Text>
+        <Text style={styles.emptySubtitle}>
+          Importez un fichier GPX depuis l'onglet {'\n'}Carte pour voir vos activités
+        </Text>
+        <TouchableOpacity
+          style={styles.emptyButton}
+          onPress={() => router.push('/(tabs)')}
+        >
+          <Text style={styles.emptyButtonText}>→ Aller sur la carte</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -67,6 +85,13 @@ export default function ActivitiesScreen() {
             <Text style={styles.date}>{item.stats.started_at.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
           </TouchableOpacity>
         )}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
+        }
       />
     </View>
   );
@@ -162,9 +187,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.offWhite,
     padding: 32,
   },
+  emptyIllustration: {
+    marginBottom: 24,
+    position: 'relative',
+  },
   emptyIcon: {
-    fontSize: 56,
-    marginBottom: 16,
+    fontSize: 72,
+  },
+  emptySubIcon: {
+    fontSize: 32,
+    position: 'absolute',
+    bottom: -8,
+    right: -8,
   },
   emptyTitle: {
     fontSize: 20,
@@ -176,5 +210,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9CA3AF',
     textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  emptyButtonText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
