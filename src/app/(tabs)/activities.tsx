@@ -17,7 +17,12 @@ export default function ActivitiesScreen() {
   const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
-    return h > 0 ? `${h}h ${m}min` : `${m} min`;
+    const s = seconds % 60;
+    return h > 0 ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : `${m}:${s.toString().padStart(2, '0')}`;
+  };
+  const formatSpeed = (ms: number) => {
+    const kmh = (ms * 3.6).toFixed(1);
+    return `${kmh} km/h`;
   };
 
   if (activities.length === 0) {
@@ -46,10 +51,20 @@ export default function ActivitiesScreen() {
               <Text style={styles.stat}>{formatDistance(item.stats.distance_m)}</Text>
               <Text style={styles.statSep}>·</Text>
               <Text style={styles.stat}>{formatDuration(item.stats.duration_s)}</Text>
-              <Text style={styles.statSep}>·</Text>
-              <Text style={styles.stat}>↑ {item.stats.elevation_m.toFixed(0)} m</Text>
+              {item.stats.elevation_m > 0 && (
+                <>
+                  <Text style={styles.statSep}>·</Text>
+                  <Text style={styles.stat}>↑ {item.stats.elevation_m.toFixed(0)} m</Text>
+                </>
+              )}
             </View>
-            <Text style={styles.date}>{item.stats.started_at.toLocaleDateString('fr-FR')}</Text>
+            {item.stats.avg_hr && (
+              <View style={styles.hrRow}>
+                <Text style={styles.hrIcon}>💓</Text>
+                <Text style={styles.hrText}>{item.stats.avg_hr} bpm moy.</Text>
+              </View>
+            )}
+            <Text style={styles.date}>{item.stats.started_at.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
           </TouchableOpacity>
         )}
       />
@@ -118,12 +133,27 @@ const styles = StyleSheet.create({
   statSep: {
     fontSize: 14,
     color: colors.lightGray,
-    marginHorizontal: 8,
+    marginHorizontal: 6,
+  },
+  hrRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 6,
+  },
+  hrIcon: {
+    fontSize: 14,
+  },
+  hrText: {
+    fontSize: 13,
+    color: colors.hrZone4,
+    fontWeight: '500',
   },
   date: {
     fontSize: 12,
     color: '#9CA3AF',
-    marginTop: 4,
+    marginTop: 6,
+    textTransform: 'capitalize',
   },
   empty: {
     flex: 1,

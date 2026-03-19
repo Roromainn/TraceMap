@@ -49,11 +49,12 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
   const router = useRouter();
 
   const passwordStrength = getPasswordStrength(password);
 
-  // Check if user is already logged in
+  // Check if user is already logged in (but don't redirect - just show info)
   useEffect(() => {
     checkAuth();
   }, []);
@@ -62,7 +63,8 @@ export default function AuthScreen() {
     try {
       const user = await getCurrentUser();
       if (user) {
-        router.replace('/(tabs)');
+        setLoggedInUser(user.email);
+        console.log('[Auth] User already logged in:', user.email);
       }
     } catch (error) {
       console.error('Auth check error:', error);
@@ -164,6 +166,20 @@ export default function AuthScreen() {
           {isSignUp ? 'Créez votre compte' : 'Connectez-vous'}
         </Text>
       </View>
+
+      {/* Already logged in banner */}
+      {loggedInUser && (
+        <View style={styles.loggedInBanner}>
+          <Text style={styles.loggedInText}>✅ Connecté en tant que</Text>
+          <Text style={styles.loggedInEmail}>{loggedInUser}</Text>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={() => router.replace('/(tabs)')}
+          >
+            <Text style={styles.continueButtonText}>→ Continuer vers l'appli</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Form */}
       <View style={styles.form}>
@@ -341,6 +357,37 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#6B7280',
+  },
+  loggedInBanner: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  loggedInText: {
+    fontSize: 13,
+    color: '#166534',
+    marginBottom: 4,
+  },
+  loggedInEmail: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#166534',
+    marginBottom: 12,
+  },
+  continueButton: {
+    backgroundColor: '#16A34A',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  continueButtonText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '700',
   },
   form: {
     gap: 16,
