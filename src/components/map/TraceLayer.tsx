@@ -5,11 +5,13 @@ import { colors } from '../../utils/colors';
 
 interface TraceLayerProps {
   trace: LineString;
+  color?: string; // Optional custom color
 }
 
-export function TraceLayer({ trace }: TraceLayerProps) {
+export function TraceLayer({ trace, color }: TraceLayerProps) {
   const sourceId = 'trace-source';
   const layerId = 'trace-layer';
+  const traceColor = color || colors.primary;
 
   const geojson: FeatureCollection = useMemo(() => ({
     type: 'FeatureCollection',
@@ -27,13 +29,13 @@ export function TraceLayer({ trace }: TraceLayerProps) {
       <MapLibreGL.ShapeSource
         id={sourceId}
         shape={geojson}
-        lineMetrics={true} // Enable for gradient styling
+        lineMetrics={true}
       >
         {/* Outer glow layer (wider, semi-transparent) */}
         <MapLibreGL.LineLayer
           id={`${layerId}-glow`}
           style={{
-            lineColor: colors.primary,
+            lineColor: traceColor,
             lineWidth: 8,
             lineOpacity: 0.3,
             lineCap: 'round',
@@ -45,7 +47,7 @@ export function TraceLayer({ trace }: TraceLayerProps) {
         <MapLibreGL.LineLayer
           id={layerId}
           style={{
-            lineColor: colors.primary,
+            lineColor: traceColor,
             lineWidth: 4,
             lineCap: 'round',
             lineJoin: 'round',

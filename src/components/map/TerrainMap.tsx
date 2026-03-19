@@ -46,10 +46,22 @@ export function TerrainMap({ traces = [], bounds }: TerrainMapProps) {
           heading={viewport.bearing}
         />
       )}
-      {/* Render all traces */}
-      {traces.map((trace, index) => (
-        <TraceLayer key={`trace-${index}`} trace={trace} />
-      ))}
+      {/* Render all traces with different colors */}
+      {traces.map((trace, index) => {
+        // Different colors for each trace
+        const traceColors = [
+          '#F97316', // Orange (primary)
+          '#3B82F6', // Blue
+          '#10B981', // Green
+          '#EF4444', // Red
+          '#8B5CF6', // Purple
+        ];
+        const color = traceColors[index % traceColors.length];
+        
+        return (
+          <TraceLayer key={`trace-${index}`} trace={trace} color={color} />
+        );
+      })}
     </MapLibreGL.MapView>
   );
 }
