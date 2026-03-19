@@ -25,15 +25,28 @@ export default function MapScreen() {
   // Show most recent activity trace on map
   useEffect(() => {
     if (activities.length > 0 && activities[0].trace?.coordinates?.length > 0) {
-      setTrace(activities[0].trace as LineString);
+      const activityTrace = activities[0].trace as LineString;
+      setTrace(activityTrace);
       
-      // Calculate bounds
-      const coords = activities[0].trace.coordinates;
+      console.log('[Map] Loading trace with', activityTrace.coordinates.length, 'points');
+      
+      // Calculate bounds with padding
+      const coords = activityTrace.coordinates;
       const lngs = coords.map(([lng]: [number, number, number?]) => lng);
       const lats = coords.map(([, lat]: [number, number, number?]) => lat);
+      
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      
+      // Add 20% padding around the trace
+      const lngPadding = (maxLng - minLng) * 0.2 || 0.01;
+      const latPadding = (maxLat - minLat) * 0.2 || 0.01;
+      
       setBounds({
-        ne: [Math.max(...lngs), Math.max(...lats)],
-        sw: [Math.min(...lngs), Math.min(...lats)],
+        ne: [maxLng + lngPadding, maxLat + latPadding],
+        sw: [minLng - lngPadding, minLat - latPadding],
       });
       
       showInfo(`${activities[0].title} affiché sur la carte`);

@@ -166,7 +166,14 @@ export async function getActivities(
   const { data, error } = await query;
 
   if (error) throw error;
-  return data as ActivityWithPoints[] || [];
+  
+  // Sort activity_points by seq manually
+  const sortedData = (data || []).map((activity) => ({
+    ...activity,
+    activity_points: (activity.activity_points || []).sort((a, b) => a.seq - b.seq),
+  }));
+  
+  return sortedData as ActivityWithPoints[];
 }
 
 export async function getActivityById(
