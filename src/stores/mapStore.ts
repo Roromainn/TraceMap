@@ -64,24 +64,36 @@ export const useMapStore = create<MapState>((set, get) => ({
       hasHR: activity.points.some((p) => p.heart_rate !== null),
     });
     
+    // Optimistic save: show immediately in UI
+    const id = user ? 'supabase-' + Date.now() : 'local-' + Date.now();
+    
+    set((state) => ({
+      activities: [{ ...activity, id, title, isSaved: !!user }, ...state.activities],
+      selectedActivityId: id,
+    }));
+    
     if (user) {
-      // Save to Supabase
+      // Save to Supabase in background (don't block UI)
       set({ isLoading: true });
       try {
-        console.log('[MapStore] Saving to Supabase...');
-        const id = await createActivityFromGPX(user.id, activity, {
+        console.log('[MapStore] Saving to Supabase in background...');
+        const supabaseId = await createActivityFromGPX(user.id, activity, {
           title,
           rawGpxContent: gpxContent,
           fileName: `${title}.gpx`,
         });
         
-        console.log('[MapStore] Saved successfully with ID:', id);
+        console.log('[MapStore] Saved successfully with ID:', supabaseId);
+        
+        // Update the activity with the real Supabase ID
         set((state) => ({
-          activities: [{ ...activity, id, title, isSaved: true }, ...state.activities],
-          selectedActivityId: id,
+          activities: state.activities.map((a) => 
+            a.id === id ? { ...a, id: supabaseId, isSaved: true } : a
+          ),
           isLoading: false,
         }));
-        return id;
+        
+        return supabaseId;
       } catch (error: any) {
         console.error('[MapStore] Failed to save activity:', error);
         alert(`Erreur sauvegarde: ${error.message}`);
@@ -91,11 +103,6 @@ export const useMapStore = create<MapState>((set, get) => ({
     } else {
       // Save locally only
       console.log('[MapStore] No user, saving locally');
-      const id = 'local-' + Date.now();
-      set((state) => ({
-        activities: [{ ...activity, id, title, isSaved: false }, ...state.activities],
-        selectedActivityId: id,
-      }));
       return id;
     }
   },
@@ -103,8 +110,50 @@ export const useMapStore = create<MapState>((set, get) => ({
   getActivityById: (id) => get().activities.find((a) => a.id === id),
   
   loadActivities: async () => {
-    // TODO: Load from Supabase when implemented
-    set({ activities: [] });
+    const user = await getCurrentUser();
+    
+    if (!user) {
+      console.log('[MapStore] No user, skipping load');
+      set({ activities: [] });
+      return;
+    }
+    
+    console.log('[MapStore] Loading activities for user:', user.id);
+    set({ isLoading: true });
+    
+    try {
+      const { getActivities } = await import('../services/activities');
+      const activities = await getActivities(user.id);
+      
+      console.log('[MapStore] Loaded', activities.length, 'activities from Supabase');
+      
+      // Convert to StoredActivity format
+      const storedActivities = activities.map((a) => ({
+        ...a,
+        stats: {
+          distance_m: a.distance_m,
+          elevation_m: a.elevation_m,
+          duration_s: a.duration_s,
+          avg_speed_ms: a.avg_speed_ms,
+          avg_hr: a.avg_hr,
+          started_at: new Date(a.started_at),
+          type: a.type,
+        },
+        points: [], // Will be loaded on demand when viewing detail
+        trace: {
+          type: 'LineString' as const,
+          coordinates: [], // Will be loaded on demand
+        },
+      }));
+      
+      set({ 
+        activities: storedActivities,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error('[MapStore] Failed to load activities:', error);
+      set({ activities: [], isLoading: false });
+    }
   },
   
   refresh: async () => {

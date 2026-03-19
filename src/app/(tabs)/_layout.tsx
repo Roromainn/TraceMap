@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../utils/colors';
+import { useMapStore } from '../../stores/mapStore';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -16,6 +17,13 @@ function TabIcon({ name, focused }: { name: IoniconsName; focused: boolean }) {
 }
 
 export default function TabsLayout() {
+  const { loadActivities } = useMapStore();
+
+  // Load activities when tabs mount
+  useEffect(() => {
+    loadActivities();
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
