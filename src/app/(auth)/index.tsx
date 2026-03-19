@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signUpWithEmail, signInWithEmail, signInWithGoogle } from '../services/activities';
-import { colors } from '../utils/colors';
+import { signUpWithEmail, signInWithEmail, signInWithGoogle, getCurrentUser } from '../../services/activities';
+import { colors } from '../../utils/colors';
 
 // Validation email simple
 function isValidEmail(email: string): boolean {
@@ -52,6 +52,22 @@ export default function AuthScreen() {
   const router = useRouter();
 
   const passwordStrength = getPasswordStrength(password);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  async function checkAuth() {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+  }
 
   const handleAuth = async () => {
     // Validations
