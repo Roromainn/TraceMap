@@ -151,8 +151,7 @@ export async function getActivities(
   userId: string,
   dateRange?: { start: Date; end: Date }
 ): Promise<ActivityWithPoints[]> {
-  // Supabase limits nested relations to 1000 by default
-  // We need to fetch activity_points separately to avoid this limit
+  // Fetch activities list
   const { data: activities, error: activitiesError } = await supabase
     .from('activities')
     .select('*')
@@ -162,29 +161,41 @@ export async function getActivities(
   if (activitiesError) throw activitiesError;
   if (!activities || activities.length === 0) return [];
 
-  // Fetch points for each activity separately (avoids 1000 limit)
+  // Fetch ALL points for each activity using pagination (Supabase limits to 1000 per request)
   const activitiesWithPoints = await Promise.all(
     activities.map(async (activity) => {
-      const { data: points, error: pointsError } = await supabase
-        .from('activity_points')
-        .select('*', { count: 'exact' })
-        .eq('activity_id', activity.id)
-        .order('seq', { ascending: true })
-        .limit(10000); // Increase limit to handle large activities
+      const allPoints: any[] = [];
+      const pageSize = 1000;
+      let page = 0;
+      let hasMore = true;
 
-      if (pointsError) {
-        console.error('Error loading points for activity', activity.id, pointsError);
-        return { ...activity, activity_points: [] };
+      // Paginate through all points (1000 per page)
+      while (hasMore) {
+        const { data: points, error: pointsError } = await supabase
+          .from('activity_points')
+          .select('*')
+          .eq('activity_id', activity.id)
+          .order('seq', { ascending: true })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (pointsError) {
+          console.error('Error loading points for activity', activity.id, pointsError);
+          break;
+        }
+
+        if (points && points.length > 0) {
+          allPoints.push(...points);
+          hasMore = points.length === pageSize;
+          page++;
+        } else {
+          hasMore = false;
+        }
       }
 
-      return { ...activity, activity_points: points || [] };
+      console.log(`[getActivities] Activity "${activity.title}": ${allPoints.length} points loaded`);
+      return { ...activity, activity_points: allPoints };
     })
   );
-
-  console.log('[getActivities] Loaded', activitiesWithPoints.length, 'activities');
-  activitiesWithPoints.forEach((a, i) => {
-    console.log(`  Activity ${i+1}: ${a.title} - ${a.activity_points?.length || 0} points`);
-  });
 
   return activitiesWithPoints as ActivityWithPoints[];
 }
