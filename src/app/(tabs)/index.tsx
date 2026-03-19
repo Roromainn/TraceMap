@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { TerrainMap } from '../../components/map/TerrainMap';
 import { ImportButton } from '../../components/ui/ImportButton';
@@ -14,8 +14,31 @@ export default function MapScreen() {
   const [trace, setTrace] = useState<LineString | null>(null);
   const [bounds, setBounds] = useState<Bounds | null>(null);
   const [isParsing, setIsParsing] = useState(false);
-  const { addActivity } = useMapStore();
+  const { activities, addActivity, loadActivities } = useMapStore();
   const { showSuccess, showError, showInfo } = useToast();
+
+  // Load activities on mount (after login)
+  useEffect(() => {
+    loadActivities();
+  }, []);
+
+  // Show most recent activity trace on map
+  useEffect(() => {
+    if (activities.length > 0 && activities[0].trace?.coordinates?.length > 0) {
+      setTrace(activities[0].trace as LineString);
+      
+      // Calculate bounds
+      const coords = activities[0].trace.coordinates;
+      const lngs = coords.map(([lng]: [number, number, number?]) => lng);
+      const lats = coords.map(([, lat]: [number, number, number?]) => lat);
+      setBounds({
+        ne: [Math.max(...lngs), Math.max(...lats)],
+        sw: [Math.min(...lngs), Math.min(...lats)],
+      });
+      
+      showInfo(`${activities[0].title} affiché sur la carte`);
+    }
+  }, [activities]);
 
   const handleFileSelected = async (content: string, fileName: string, error?: string) => {
     // Handle import errors
