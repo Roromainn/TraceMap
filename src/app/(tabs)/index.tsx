@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { TerrainMap } from '../../components/map/TerrainMap';
 import { ImportButton } from '../../components/ui/ImportButton';
 import { parseGPX } from '../../services/gpxParser';
 import { useMapStore } from '../../stores/mapStore';
+import { useToast } from '../../contexts/ToastContext';
+import { colors } from '../../utils/colors';
 import { LineString } from 'geojson';
 
 type Bounds = { ne: [number, number]; sw: [number, number] };
@@ -11,9 +13,23 @@ type Bounds = { ne: [number, number]; sw: [number, number] };
 export default function MapScreen() {
   const [trace, setTrace] = useState<LineString | null>(null);
   const [bounds, setBounds] = useState<Bounds | null>(null);
+  const [isParsing, setIsParsing] = useState(false);
   const { addActivity } = useMapStore();
+  const { showSuccess, showError, showInfo } = useToast();
 
-  const handleFileSelected = async (content: string, fileName: string) => {
+  const handleFileSelected = async (content: string, fileName: string, error?: string) => {
+    // Handle import errors
+    if (error) {
+      showError(error);
+      return;
+    }
+
+    // Handle file picker cancel
+    if (!content && !fileName) {
+      return;
+    }
+
+    setIsParsing(true);
     try {
       const parsed = await parseGPX(content);
       setTrace(parsed.trace);
@@ -29,16 +45,25 @@ export default function MapScreen() {
 
       const title = fileName.replace(/\.gpx$/i, '');
       await addActivity(parsed, title, content); // Pass GPX content for upload
-    } catch (error) {
+      
+      showSuccess(`${title} importé avec succès !`);
+    } catch (error: any) {
       console.error('Error parsing GPX:', error);
-      alert('Impossible de lire le fichier GPX. Vérifiez que le fichier est valide.');
+      showError('Impossible de lire le fichier GPX. Vérifiez que le fichier est valide.');
+    } finally {
+      setIsParsing(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <TerrainMap trace={trace} bounds={bounds} />
-      <ImportButton onFileSelected={handleFileSelected} />
+      {isParsing && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
+      <ImportButton onFileSelected={handleFileSelected} disabled={isParsing} />
     </View>
   );
 }
@@ -46,5 +71,12 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
   },
 });

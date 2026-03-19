@@ -1,14 +1,19 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { colors } from '../../utils/colors';
 
 interface ImportButtonProps {
-  onFileSelected: (content: string, fileName: string) => void;
+  onFileSelected: (content: string, fileName: string, error?: string) => void;
+  disabled?: boolean;
 }
 
-export function ImportButton({ onFileSelected }: ImportButtonProps) {
+export function ImportButton({ onFileSelected, disabled }: ImportButtonProps) {
+  const [isImporting, setIsImporting] = useState(false);
+
   const handleImport = async () => {
+    setIsImporting(true);
     try {
       const result = await DocumentPicker.getDocumentAsync({
         // '*/*' nécessaire sur Android — le type GPX n'est pas reconnu par le système
@@ -17,6 +22,7 @@ export function ImportButton({ onFileSelected }: ImportButtonProps) {
       });
 
       if (result.canceled || !result.assets?.[0]) {
+        setIsImporting(false);
         return;
       }
 
@@ -24,34 +30,46 @@ export function ImportButton({ onFileSelected }: ImportButtonProps) {
 
       // Vérification de l'extension .gpx
       if (!file.name.toLowerCase().endsWith('.gpx')) {
-        alert('Veuillez sélectionner un fichier .gpx');
+        onFileSelected('', file.name, 'Veuillez sélectionner un fichier .gpx');
+        setIsImporting(false);
         return;
       }
-      
+
       // Check file size (50MB limit)
       if (file.size && file.size > 50 * 1024 * 1024) {
-        alert('File too large. Maximum size is 50MB.');
+        onFileSelected('', file.name, 'Fichier trop volumineux. Maximum 50MB.');
+        setIsImporting(false);
         return;
       }
-      
+
       // Read file content
       const response = await fetch(file.uri);
       const content = await response.text();
-      
+
       onFileSelected(content, file.name);
     } catch (error) {
       console.error('Error importing GPX:', error);
-      alert('Failed to import GPX file');
+      onFileSelected('', '', 'Échec de l\'import GPX');
+    } finally {
+      setIsImporting(false);
     }
   };
-  
+
   return (
     <TouchableOpacity
-      style={styles.button}
+      style={[styles.button, disabled && styles.buttonDisabled]}
       onPress={handleImport}
+      disabled={isImporting || disabled}
       activeOpacity={0.8}
     >
-      <Text style={styles.text}>Import GPX</Text>
+      {isImporting ? (
+        <ActivityIndicator color={colors.white} size="small" />
+      ) : (
+        <>
+          <Ionicons name="download-outline" size={20} color={colors.white} style={styles.icon} />
+          <Text style={styles.text}>Import GPX</Text>
+        </>
+      )}
     </TouchableOpacity>
   );
 }
@@ -70,6 +88,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  icon: {
+    marginRight: 4,
   },
   text: {
     color: colors.white,

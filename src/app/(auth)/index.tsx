@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { signUpWithEmail, signInWithEmail, signInWithGoogle, getCurrentUser, signOut } from '../../services/activities';
 import { colors } from '../../utils/colors';
 import { useSessionStore } from '../../stores/sessionStore';
+import { useToast } from '../../contexts/ToastContext';
 
 // Validation email simple
 function isValidEmail(email: string): boolean {
@@ -56,6 +57,7 @@ export default function AuthScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const { setSession } = useSessionStore();
+  const { showSuccess, showError } = useToast();
 
   const passwordStrength = getPasswordStrength(password);
 
@@ -118,7 +120,7 @@ export default function AuthScreen() {
           if (result && result.user) {
             setSession({ user: result.user, session: result.session });
             setLoggedInUser(result.user.email);
-            Alert.alert('✅ Compte debug connecté', 'Bienvenue !');
+            showSuccess('Compte debug connecté !');
             router.replace('/(tabs)');
           }
         } catch (signInError: any) {
@@ -128,13 +130,13 @@ export default function AuthScreen() {
           if (result && result.user) {
             setSession({ user: result.user, session: result.session });
             setLoggedInUser(result.user.email);
-            Alert.alert('✅ Compte debug créé', 'Bienvenue !');
+            showSuccess('Compte debug créé !');
             router.replace('/(tabs)');
           }
         }
       } catch (error: any) {
         console.error('Debug auth error:', error);
-        Alert.alert('Erreur', error.message || 'Une erreur est survenue');
+        showError(error.message || 'Une erreur est survenue');
       } finally {
         setIsLoading(false);
       }
@@ -148,26 +150,24 @@ export default function AuthScreen() {
         const result = await signUpWithEmail(email, password);
         if (result && result.user) {
           setSession({ user: result.user, session: result.session });
-          Alert.alert(
-            '✅ Compte créé !',
-            'Un email de confirmation a été envoyé. Vérifiez votre boîte mail.',
-            [{ text: 'OK', onPress: () => router.replace('/(tabs)') }]
-          );
+          showSuccess('Compte créé avec succès !');
+          router.replace('/(tabs)');
         } else {
-          Alert.alert('Erreur', 'Réponse invalide du serveur');
+          showError('Réponse invalide du serveur');
         }
       } else {
         const result = await signInWithEmail(email, password);
         if (result && result.user) {
           setSession({ user: result.user, session: result.session });
+          showSuccess('Connexion réussie !');
           router.replace('/(tabs)');
         } else {
-          Alert.alert('Erreur', 'Réponse invalide du serveur');
+          showError('Réponse invalide du serveur');
         }
       }
     } catch (error: any) {
       console.error('Auth error:', error);
-      Alert.alert('Erreur', error.message || 'Une erreur est survenue.');
+      showError(error.message || 'Une erreur est survenue.');
     } finally {
       setIsLoading(false);
     }

@@ -5,6 +5,7 @@ import { useSessionStore } from '../../stores/sessionStore';
 import { SpeedUnit, SPEED_UNIT_LABELS } from '../../utils/units';
 import { colors } from '../../utils/colors';
 import { useRouter } from 'expo-router';
+import { useToast } from '../../contexts/ToastContext';
 
 const SPEED_OPTIONS: { value: SpeedUnit; label: string; description: string }[] = [
   { value: 'min_km',   label: 'min/km',  description: 'Allure (course à pied, rando)' },
@@ -17,6 +18,7 @@ export default function SettingsScreen() {
   const { speedUnit, setSpeedUnit } = useSettingsStore();
   const { user, signOut } = useSessionStore();
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
 
   console.log('[Settings] user:', user?.email || 'null');
 
@@ -32,9 +34,10 @@ export default function SettingsScreen() {
           onPress: async () => {
             try {
               await signOut();
+              showSuccess('Déconnecté avec succès');
               router.replace('/(auth)');
             } catch (error: any) {
-              Alert.alert('Erreur', error.message);
+              showError(error.message);
             }
           },
         },
