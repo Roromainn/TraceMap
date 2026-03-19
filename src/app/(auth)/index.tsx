@@ -109,22 +109,29 @@ export default function AuthScreen() {
       setIsLoading(true);
       try {
         // Try to sign in, if user doesn't exist, create it
+        let result;
         try {
-          const { data } = await signInWithEmail(email, password);
-          setSession({ user: data.user, session: data.session });
-          setLoggedInUser(data.user.email);
-          Alert.alert('✅ Compte debug connecté', 'Bienvenue !');
-          router.replace('/(tabs)');
-        } catch {
+          result = await signInWithEmail(email, password);
+          if (result && result.user) {
+            setSession({ user: result.user, session: result.session });
+            setLoggedInUser(result.user.email);
+            Alert.alert('✅ Compte debug connecté', 'Bienvenue !');
+            router.replace('/(tabs)');
+          }
+        } catch (signInError: any) {
           // User doesn't exist, create it
-          const { data } = await signUpWithEmail(email, password);
-          setSession({ user: data.user, session: data.session });
-          setLoggedInUser(data.user.email);
-          Alert.alert('✅ Compte debug créé', 'Bienvenue !');
-          router.replace('/(tabs)');
+          console.log('Sign in failed, creating user:', signInError.message);
+          result = await signUpWithEmail(email, password);
+          if (result && result.user) {
+            setSession({ user: result.user, session: result.session });
+            setLoggedInUser(result.user.email);
+            Alert.alert('✅ Compte debug créé', 'Bienvenue !');
+            router.replace('/(tabs)');
+          }
         }
       } catch (error: any) {
-        Alert.alert('Erreur', error.message);
+        console.error('Debug auth error:', error);
+        Alert.alert('Erreur', error.message || 'Une erreur est survenue');
       } finally {
         setIsLoading(false);
       }
@@ -135,24 +142,28 @@ export default function AuthScreen() {
     setIsLoading(true);
     try {
       if (isSignUp) {
-        const { data, error } = await signUpWithEmail(email, password);
-        if (error) throw error;
-        
-        if (data.user) {
-          setSession({ user: data.user, session: data.session });
+        const result = await signUpWithEmail(email, password);
+        if (result && result.user) {
+          setSession({ user: result.user, session: result.session });
           Alert.alert(
             '✅ Compte créé !',
             'Un email de confirmation a été envoyé. Vérifiez votre boîte mail.',
             [{ text: 'OK', onPress: () => router.replace('/(tabs)') }]
           );
+        } else {
+          Alert.alert('Erreur', 'Réponse invalide du serveur');
         }
       } else {
-        const { data, error } = await signInWithEmail(email, password);
-        if (error) throw error;
-        setSession({ user: data.user, session: data.session });
-        router.replace('/(tabs)');
+        const result = await signInWithEmail(email, password);
+        if (result && result.user) {
+          setSession({ user: result.user, session: result.session });
+          router.replace('/(tabs)');
+        } else {
+          Alert.alert('Erreur', 'Réponse invalide du serveur');
+        }
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       Alert.alert('Erreur', error.message || 'Une erreur est survenue.');
     } finally {
       setIsLoading(false);

@@ -199,6 +199,9 @@ export async function signInWithEmail(email: string, password: string) {
     password,
   });
   if (error) throw error;
+  if (!data || !data.user) {
+    throw new Error('Connexion échouée: aucune donnée utilisateur');
+  }
   return data;
 }
 
@@ -211,6 +214,9 @@ export async function signUpWithEmail(email: string, password: string) {
     password,
   });
   if (error) throw error;
+  if (!data || !data.user) {
+    throw new Error('Inscription échouée: aucune donnée utilisateur');
+  }
   return data;
 }
 
