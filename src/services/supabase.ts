@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+// Hardcoded values from .env (Expo doesn't load .env automatically in all contexts)
+const SUPABASE_URL = 'https://uavoefrjoxbfysiftwul.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhdm9lZnJqb3hiZnlzaWZ0d3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Mjc3NzUsImV4cCI6MjA4OTUwMzc3NX0.K-9Uu5e8VkSjuQe4f32GNtYcCFsqp3asmHugMMf1FiE';
 
 // Custom storage using Expo SecureStore (tokens chiffrés sur l'appareil)
 const expoStorage = {

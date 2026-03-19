@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Garmin Test">
+  <trk>
+    <name>Test Ride</name>
+    <type>cycling</type>
+    <trkseg>
+      <trkpt lat="47.32165306806564" lon="5.053859381005168">
+        <ele>242.6</ele>
+        <time>2026-03-18T17:01:24.000Z</time>
+        <extensions>
+          <TrackPointExtension>
+            <ns3:atemp>29.0</ns3:atemp>
+            <ns3:hr>97</ns3:hr>
+            <ns3:cad>0</ns3:cad>
+          </TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="47.32166874222457" lon="5.053841611370444">
+        <ele>242.6</ele>
+        <time>2026-03-18T17:01:25.000Z</time>
+        <extensions>
+          <TrackPointExtension>
+            <ns3:atemp>29.0</ns3:atemp>
+            <ns3:hr>98</ns3:hr>
+            <ns3:cad>0</ns3:cad>
+          </TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="47.32168257236481" lon="5.053824931383133">
+        <ele>242.4</ele>
+        <time>2026-03-18T17:01:26.000Z</time>
+        <extensions>
+          <TrackPointExtension>
+            <ns3:atemp>29.0</ns3:atemp>
+            <ns3:hr>98</ns3:hr>
+            <ns3:cad>0</ns3:cad>
+          </TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="47.32168952934444" lon="5.053785117343068">
+        <ele>242.4</ele>
+        <time>2026-03-18T17:01:27.000Z</time>
+        <extensions>
+          <TrackPointExtension>
+            <ns3:atemp>29.0</ns3:atemp>
+            <ns3:hr>99</ns3:hr>
+            <ns3:cad>57</ns3:cad>
+          </TrackPointExtension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -24,21 +24,22 @@ export interface ParsedActivity {
 
 /**
  * Extract heart rate from GPX track point extensions.
- * Supports: Garmin (gpxtpx:hr), Strava (ns3:hr), and flat <hr> tags.
+ * Supports: Garmin (ns3:hr in TrackPointExtension), gpxtpx:hr, and flat <hr> tags.
  */
 function extractHeartRate(pt: any): number | null {
   const ext = pt.extensions;
   if (!ext) return null;
 
-  // Garmin format: extensions > TrackPointExtension > hr
-  const tpe = ext['gpxtpx:TrackPointExtension'] ?? ext['TrackPointExtension'];
+  // Garmin format: extensions > TrackPointExtension > ns3:hr
+  const tpe = ext['TrackPointExtension'];
   if (tpe) {
-    const hr = tpe['gpxtpx:hr'] ?? tpe['ns3:hr'] ?? tpe['hr'];
+    // Try all possible HR tag names
+    const hr = tpe['ns3:hr'] ?? tpe['gpxtpx:hr'] ?? tpe['hr'];
     if (hr != null) return parseInt(String(hr), 10);
   }
 
-  // Flat format
-  const hr = ext['gpxtpx:hr'] ?? ext['ns3:hr'] ?? ext['hr'];
+  // Direct in extensions (some formats)
+  const hr = ext['ns3:hr'] ?? ext['gpxtpx:hr'] ?? ext['hr'];
   if (hr != null) return parseInt(String(hr), 10);
 
   return null;
