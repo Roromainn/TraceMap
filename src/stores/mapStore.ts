@@ -56,29 +56,41 @@ export const useMapStore = create<MapState>((set, get) => ({
   addActivity: async (activity, title, gpxContent) => {
     const user = await getCurrentUser();
     
+    console.log('[MapStore] addActivity called:', {
+      title,
+      hasUser: !!user,
+      userId: user?.id,
+      pointsCount: activity.points.length,
+      hasHR: activity.points.some((p) => p.heart_rate !== null),
+    });
+    
     if (user) {
       // Save to Supabase
       set({ isLoading: true });
       try {
+        console.log('[MapStore] Saving to Supabase...');
         const id = await createActivityFromGPX(user.id, activity, {
           title,
           rawGpxContent: gpxContent,
           fileName: `${title}.gpx`,
         });
         
+        console.log('[MapStore] Saved successfully with ID:', id);
         set((state) => ({
           activities: [{ ...activity, id, title, isSaved: true }, ...state.activities],
           selectedActivityId: id,
           isLoading: false,
         }));
         return id;
-      } catch (error) {
-        console.error('Failed to save activity:', error);
+      } catch (error: any) {
+        console.error('[MapStore] Failed to save activity:', error);
+        alert(`Erreur sauvegarde: ${error.message}`);
         set({ isLoading: false });
         throw error;
       }
     } else {
       // Save locally only
+      console.log('[MapStore] No user, saving locally');
       const id = 'local-' + Date.now();
       set((state) => ({
         activities: [{ ...activity, id, title, isSaved: false }, ...state.activities],

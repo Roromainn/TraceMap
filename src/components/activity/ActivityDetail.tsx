@@ -5,6 +5,7 @@ import { StatsBar } from './StatsBar';
 import { ElevationChart } from './ElevationChart';
 import { SpeedChart } from './SpeedChart';
 import { HRZonesChart } from './HRZonesChart';
+import { HREvolutionChart } from './HREvolutionChart';
 import { colors } from '../../utils/colors';
 
 interface ActivityDetailProps {
@@ -42,13 +43,21 @@ export function ActivityDetail({ activity }: ActivityDetailProps) {
 
       {/* Vitesse */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>⚡ Vitesse (km/h)</Text>
+        <Text style={styles.sectionTitle}>⚡ Vitesse</Text>
         <SpeedChart points={activity.points} />
       </View>
 
+      {/* Évolution FC */}
+      {activity.points.some((p) => p.heart_rate !== null) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>💓 Évolution de la FC</Text>
+          <HREvolutionChart points={activity.points} />
+        </View>
+      )}
+
       {/* Zones FC */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>💓 Zones de fréquence cardiaque</Text>
+        <Text style={styles.sectionTitle}>🎯 Zones de fréquence cardiaque</Text>
         <HRZonesChart points={activity.points} />
       </View>
     </ScrollView>
