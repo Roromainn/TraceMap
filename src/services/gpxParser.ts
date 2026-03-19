@@ -73,6 +73,9 @@ export async function parseGPX(gpxContent: string): Promise<ParsedActivity> {
     ignoreAttributes: false,
     attributeNamePrefix: '@_',
     isArray: (name) => name === 'trkpt' || name === 'trkseg',
+    // XXE Protection - CRITICAL for security
+    allowExternalEntities: false,
+    ignoreExternalEntities: true,
   });
 
   const result = parser.parse(gpxContent);
