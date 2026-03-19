@@ -26,35 +26,20 @@ export function TraceLayer({ trace, color, index = 0 }: TraceLayerProps) {
   }), [trace, index]);
 
   return (
-    <>
-      <MapLibreGL.ShapeSource
-        id={sourceId}
-        shape={geojson}
-        lineMetrics={true}
-      >
-        {/* White outline layer for visibility */}
-        <MapLibreGL.LineLayer
-          id={`${layerId}-outline`}
-          style={{
-            lineColor: '#FFFFFF',
-            lineWidth: 6,
-            lineOpacity: 0.9,
-            lineCap: 'round',
-            lineJoin: 'round',
-          }}
-        />
-        
-        {/* Main trace layer */}
-        <MapLibreGL.LineLayer
-          id={layerId}
-          style={{
-            lineColor: traceColor,
-            lineWidth: 4,
-            lineCap: 'round',
-            lineJoin: 'round',
-          }}
-        />
-      </MapLibreGL.ShapeSource>
-    </>
+    <MapLibreGL.ShapeSource
+      id={sourceId}
+      shape={geojson}
+    >
+      {/* Single trace layer for performance */}
+      <MapLibreGL.LineLayer
+        id={layerId}
+        style={{
+          lineColor: traceColor,
+          lineWidth: 4,
+          lineCap: 'round',
+          lineJoin: 'round',
+        }}
+      />
+    </MapLibreGL.ShapeSource>
   );
 }

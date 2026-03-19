@@ -16,6 +16,7 @@ export default function MapScreen() {
   const [isParsing, setIsParsing] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [enable3D, setEnable3D] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
   const { activities, addActivity, loadActivities } = useMapStore();
   const { showSuccess, showError, showInfo } = useToast();
 
@@ -27,14 +28,37 @@ export default function MapScreen() {
     }
   }, []);
 
-  // Show ALL activity traces on map
+  // Delay trace rendering to avoid blocking initial load
   useEffect(() => {
     if (activities.length === 0) return;
     
-    // Collect all traces
+    const timer = setTimeout(() => {
+      setIsMapReady(true);
+    }, 500); // Wait 500ms after activities load
+    
+    return () => clearTimeout(timer);
+  }, [activities.length]);
+
+  // Show ALL activity traces on map (with simplification for performance)
+  useEffect(() => {
+    if (!isMapReady || activities.length === 0) return;
+    
+    // Collect all traces - simplify if too many points
+    const MAX_POINTS_PER_TRACE = 500; // Limit for performance
+    
     const allTraces = activities
       .filter((a) => a.trace?.coordinates?.length > 0)
-      .map((a) => a.trace as LineString);
+      .map((a) => {
+        const coords = a.trace.coordinates;
+        // Simplify trace if too many points
+        if (coords.length > MAX_POINTS_PER_TRACE) {
+          const step = Math.ceil(coords.length / MAX_POINTS_PER_TRACE);
+          const simplified = coords.filter((_, i) => i % step === 0);
+          console.log(`  Simplified ${a.title}: ${coords.length} → ${simplified.length} points`);
+          return { ...a.trace, coordinates: simplified } as LineString;
+        }
+        return a.trace as LineString;
+      });
     
     if (allTraces.length > 0) {
       console.log('[Map] Displaying', allTraces.length, 'activities with traces');
