@@ -1,51 +1,52 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import MapLibreGL from '@maplibre/maplibre-react-native';
+import { LineString } from 'geojson';
 import { useMapStore } from '../../stores/mapStore';
+import { TraceLayer } from './TraceLayer';
 
-// Note: Set your MapTiler access token in .env file
-// MapLibreGL.setAccessToken(process.env.MAPTILER_TOKEN);
+const MAPTILER_TOKEN = process.env.EXPO_PUBLIC_MAPTILER_TOKEN;
+const MAP_STYLE_URL = `https://api.maptiler.com/maps/outdoor/style.json?key=${MAPTILER_TOKEN}`;
 
-export function TerrainMap() {
-  const mapRef = useRef<MapLibreGL.MapView>(null);
-  const { viewport, setViewport } = useMapStore();
-  
-  useEffect(() => {
-    if (mapRef.current) {
-      mapRef.current.setCamera({
-        centerCoordinate: [viewport.lng, viewport.lat],
-        zoomLevel: viewport.zoom,
-        pitch: viewport.pitch,
-        heading: viewport.bearing,
-      });
-    }
-  }, []);
-  
-  const onCameraChanged = async (state: any) => {
-    const camera = await mapRef.current?.getCamera();
-    if (camera) {
-      setViewport({
-        lat: camera.centerCoordinate[1],
-        lng: camera.centerCoordinate[0],
-        zoom: camera.zoom,
-        pitch: camera.pitch,
-        bearing: camera.heading,
-      });
-    }
-  };
-  
+interface TraceBounds {
+  ne: [number, number]; // [lng, lat]
+  sw: [number, number]; // [lng, lat]
+}
+
+interface TerrainMapProps {
+  trace?: LineString | null;
+  bounds?: TraceBounds | null;
+}
+
+export function TerrainMap({ trace, bounds }: TerrainMapProps) {
+  const { viewport } = useMapStore();
+
   return (
     <MapLibreGL.MapView
-      ref={mapRef}
       style={{ flex: 1 }}
-      styleURL="https://api.maptiler.com/maps/outdoor/style.json?key=YOUR_MAPTILER_TOKEN"
-      onCameraChanged={onCameraChanged}
+      mapStyle={MAP_STYLE_URL}
     >
-      <MapLibreGL.Camera
-        centerCoordinate={[viewport.lng, viewport.lat]}
-        zoomLevel={viewport.zoom}
-        pitch={viewport.pitch}
-        heading={viewport.bearing}
-      />
+      {bounds ? (
+        <MapLibreGL.Camera
+          bounds={{
+            ne: bounds.ne,
+            sw: bounds.sw,
+            paddingTop: 80,
+            paddingBottom: 80,
+            paddingLeft: 40,
+            paddingRight: 40,
+          }}
+          animationMode="flyTo"
+          animationDuration={900}
+        />
+      ) : (
+        <MapLibreGL.Camera
+          centerCoordinate={[viewport.lng, viewport.lat]}
+          zoomLevel={viewport.zoom}
+          pitch={viewport.pitch}
+          heading={viewport.bearing}
+        />
+      )}
+      {trace && <TraceLayer trace={trace} />}
     </MapLibreGL.MapView>
   );
 }

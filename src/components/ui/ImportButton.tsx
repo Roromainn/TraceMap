@@ -11,15 +11,22 @@ export function ImportButton({ onFileSelected }: ImportButtonProps) {
   const handleImport = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/gpx+xml',
+        // '*/*' nécessaire sur Android — le type GPX n'est pas reconnu par le système
+        type: '*/*',
         copyToCacheDirectory: true,
       });
-      
+
       if (result.canceled || !result.assets?.[0]) {
         return;
       }
-      
+
       const file = result.assets[0];
+
+      // Vérification de l'extension .gpx
+      if (!file.name.toLowerCase().endsWith('.gpx')) {
+        alert('Veuillez sélectionner un fichier .gpx');
+        return;
+      }
       
       // Check file size (50MB limit)
       if (file.size && file.size > 50 * 1024 * 1024) {

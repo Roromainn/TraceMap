@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 
-// TODO: Replace with your actual Supabase credentials
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Custom storage for Expo
+// Custom storage using Expo SecureStore (tokens chiffrés sur l'appareil)
 const expoStorage = {
   getItem: async (key: string) => {
     return await SecureStore.getItemAsync(key);
@@ -23,5 +22,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     storage: expoStorage,
     autoRefreshToken: true,
     persistSession: true,
+    detectSessionInUrl: false,
   },
 });
