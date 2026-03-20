@@ -1,15 +1,18 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, RefreshControl } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMapStore } from '../../stores/mapStore';
 import { useToast } from '../../contexts/ToastContext';
-import { MaterialSymbolsOutlined } from '@expo/vector-icons/MaterialSymbolsOutlined';
+import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../../utils/colors';
+import { TerrainMap } from '../../components/map/TerrainMap';
+import { LineString } from 'geojson';
 
 export default function FeedScreen() {
   const { activities, setSelectedActivity, refresh } = useMapStore();
   const router = useRouter();
   const { showInfo } = useToast();
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const handleRefresh = async () => {
     await refresh();
@@ -21,6 +24,10 @@ export default function FeedScreen() {
     router.push(`/activity/${id}`);
   };
 
+  const handleAddPress = () => {
+    router.push('/(tabs)/record');
+  };
+
   const formatDistance = (meters: number) => (meters / 1000).toFixed(2) + ' km';
   const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -29,17 +36,51 @@ export default function FeedScreen() {
     return h > 0 ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const formatPace = (ms: number) => {
+    if (ms <= 0) return '--:--';
+    const minPerKm = 1000 / (ms * 60);
+    const min = Math.floor(minPerKm);
+    const sec = Math.floor((minPerKm - min) * 60);
+    return `${min}:${sec.toString().padStart(2, '0')}`;
+  };
+
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'run':
-        return 'directions_run';
+        return 'directions-run';
       case 'ride':
-        return 'directions_bike';
+        return 'directions-bike';
       case 'hike':
         return 'hiking';
       default:
-        return 'directions_walk';
+        return 'directions-walk';
     }
+  };
+
+  // Create map trace for thumbnail
+  const createMapTrace = (activity: any): { trace: LineString; bounds: any } | null => {
+    if (!activity.points || activity.points.length === 0) return null;
+    
+    const trace: LineString = {
+      type: 'LineString',
+      coordinates: activity.points.map((p: any) => [p.lng, p.lat, p.altitude_m]),
+    };
+
+    const lngs = activity.points.map((p: any) => p.lng);
+    const lats = activity.points.map((p: any) => p.lat);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const padding = 0.005;
+
+    return {
+      trace,
+      bounds: {
+        ne: [maxLng + padding, maxLat + padding] as [number, number],
+        sw: [minLng - padding, minLat - padding] as [number, number],
+      },
+    };
   };
 
   // Stats summary
@@ -73,12 +114,12 @@ export default function FeedScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity>
-            <MaterialSymbolsOutlined name="menu" size={24} color={colors.onSurfaceVariant} />
+            <MaterialIcons name="menu" size={24} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
           <Text style={styles.logo}>KINETIC</Text>
         </View>
         <TouchableOpacity>
-          <MaterialSymbolsOutlined name="notifications" size={24} color={colors.onSurfaceVariant} />
+          <MaterialIcons name="notifications-none" size={24} color={colors.onSurfaceVariant} />
         </TouchableOpacity>
       </View>
 
@@ -100,11 +141,10 @@ export default function FeedScreen() {
                   </Text>
                 </View>
               </View>
-              <MaterialSymbolsOutlined
+              <MaterialIcons
                 name={getActivityIcon(item.stats.type)}
                 size={24}
                 color={colors.primary}
-                style={{ fill: 1 }}
               />
             </View>
 
@@ -112,25 +152,45 @@ export default function FeedScreen() {
             <View style={styles.metricsGrid}>
               <View style={styles.metric}>
                 <Text style={styles.metricValue}>{formatDistance(item.stats.distance_m)}</Text>
-                <Text style={styles.metricLabel}>Distance (km)</Text>
+                <Text style={styles.metricLabel}>Distance</Text>
               </View>
               <View style={[styles.metric, styles.metricBorder]}>
                 <Text style={styles.metricValue}>{formatDuration(item.stats.duration_s)}</Text>
-                <Text style={styles.metricLabel}>Duration</Text>
+                <Text style={styles.metricLabel}>Time</Text>
               </View>
               <View style={styles.metric}>
-                <Text style={styles.metricValue}>{item.stats.elevation_m?.toFixed(0) || 0}</Text>
-                <Text style={styles.metricLabel}>Elevation (m)</Text>
+                <Text style={styles.metricValue}>{formatPace(item.stats.avg_speed_ms)}</Text>
+                <Text style={styles.metricLabel}>Pace</Text>
               </View>
             </View>
 
             {/* Map Thumbnail */}
-            <View style={styles.mapThumbnail}>
-              <View style={styles.gradientOverlay} />
-              <View style={styles.badge}>
-                <View style={styles.badgeDot} />
-                <Text style={styles.badgeText}>Route Verified</Text>
-              </View>
+            <View style={styles.mapThumbnailContainer}>
+              {(() => {
+                const mapData = createMapTrace(item);
+                if (mapData) {
+                  return (
+                    <View style={styles.mapThumbnail}>
+                      <TerrainMap
+                        traces={[mapData.trace]}
+                        bounds={mapData.bounds}
+                        enable3D={false}
+                      />
+                      <View style={styles.gradientOverlay} />
+                      <View style={styles.badge}>
+                        <View style={styles.badgeDot} />
+                        <Text style={styles.badgeText}>Route Verified</Text>
+                      </View>
+                    </View>
+                  );
+                }
+                return (
+                  <View style={[styles.mapThumbnail, styles.mapPlaceholder]}>
+                    <MaterialIcons name="map" size={48} color={colors.outline} />
+                    <Text style={styles.placeholderText}>No GPS Data</Text>
+                  </View>
+                );
+              })()}
             </View>
           </TouchableOpacity>
         )}
@@ -147,12 +207,12 @@ export default function FeedScreen() {
             <Text style={styles.statsSubtitle}>Activity Feed</Text>
             <View style={styles.bentoStats}>
               <View style={styles.bentoCard}>
-                <MaterialSymbolsOutlined name="speed" size={24} color={colors.primary} style={{ marginBottom: 12 }} />
+                <MaterialIcons name="speed" size={24} color={colors.primary} style={{ marginBottom: 12 }} />
                 <Text style={styles.bentoValue}>{totalDistance > 0 ? (totalDistance / activities.length / 1000).toFixed(1) : '0'}</Text>
                 <Text style={styles.bentoLabel}>Avg Pace (km)</Text>
               </View>
               <View style={styles.bentoCard}>
-                <MaterialSymbolsOutlined name="mountain_flag" size={24} color={colors.primary} style={{ marginBottom: 12 }} />
+                <MaterialIcons name="flag" size={24} color={colors.primary} style={{ marginBottom: 12 }} />
                 <Text style={styles.bentoValue}>{totalElevation.toFixed(0)}</Text>
                 <Text style={styles.bentoLabel}>Elevation Gain (m)</Text>
               </View>
@@ -162,8 +222,12 @@ export default function FeedScreen() {
       />
 
       {/* Floating Action Button */}
-      <TouchableOpacity style={styles.fab} activeOpacity={0.8}>
-        <MaterialSymbolsOutlined name="add" size={28} color={colors.white} style={{ fill: 1 }} />
+      <TouchableOpacity 
+        style={styles.fab} 
+        activeOpacity={0.8}
+        onPress={handleAddPress}
+      >
+        <MaterialIcons name="add" size={28} color={colors.white} />
       </TouchableOpacity>
     </View>
   );
@@ -334,10 +398,28 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textAlign: 'center',
   },
+  mapThumbnailContainer: {
+    height: 192,
+    marginTop: 16,
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginHorizontal: 20,
+  },
   mapThumbnail: {
     height: 192,
     backgroundColor: colors.surfaceContainerHigh,
-    marginTop: 16,
+  },
+  mapPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceContainerHighest,
+  },
+  placeholderText: {
+    fontSize: 14,
+    fontFamily: 'Lexend',
+    fontWeight: '600',
+    color: colors.outline,
+    marginTop: 8,
   },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,

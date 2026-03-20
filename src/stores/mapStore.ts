@@ -30,6 +30,7 @@ interface MapState {
   getActivityById: (id: string) => StoredActivity | undefined;
   loadActivities: () => Promise<void>;
   refresh: () => Promise<void>;
+  getMonthlyDistance: () => number; // Calculate monthly distance in km
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
@@ -165,5 +166,23 @@ export const useMapStore = create<MapState>((set, get) => ({
   
   refresh: async () => {
     await get().loadActivities();
+  },
+
+  getMonthlyDistance: () => {
+    const { activities } = get();
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Filter activities for current month and sum distances
+    const monthlyDistance = activities
+      .filter((a) => {
+        const activityDate = new Date(a.stats.started_at);
+        return activityDate.getMonth() === currentMonth && 
+               activityDate.getFullYear() === currentYear;
+      })
+      .reduce((sum, a) => sum + a.stats.distance_m, 0);
+    
+    return monthlyDistance / 1000; // Convert to km
   },
 }));

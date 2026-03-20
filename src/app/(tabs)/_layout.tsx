@@ -1,14 +1,11 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Tabs, useRouter, usePathname } from 'expo-router';
-import { MaterialSymbolsOutlined } from '@expo/vector-icons/MaterialSymbolsOutlined';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { Tabs } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../../utils/colors';
 import { useMapStore } from '../../stores/mapStore';
 
 function KINETICTabBar({ state, descriptors, navigation }: any) {
-  const router = useRouter();
-  const pathname = usePathname();
-
   return (
     <View style={styles.tabBar}>
       {state.routes.map((route: any, index: number) => {
@@ -23,7 +20,6 @@ function KINETICTabBar({ state, descriptors, navigation }: any) {
             style={styles.tabItem}
             onPress={() => {
               if (route.name === 'record') {
-                // TODO: Navigate to record screen
                 return;
               }
               navigation.navigate(route.name);
@@ -49,7 +45,6 @@ function KINETICTabBar({ state, descriptors, navigation }: any) {
 export default function TabsLayout() {
   const { loadActivities } = useMapStore();
 
-  // Load activities when tabs mount
   useEffect(() => {
     loadActivities();
   }, []);
@@ -61,7 +56,7 @@ export default function TabsLayout() {
         options={{
           title: 'Feed',
           tabBarIcon: ({ focused, color }: any) => (
-            <MaterialSymbolsOutlined
+            <MaterialIcons
               name={focused ? 'explore' : 'explore-outline'}
               size={24}
               color={color}
@@ -74,14 +69,12 @@ export default function TabsLayout() {
         options={{
           title: 'Record',
           tabBarIcon: ({ focused, color }: any) => (
-            <MaterialSymbolsOutlined
-              name="circle"
-              size={28}
-              fill={focused ? 1 : 0}
+            <MaterialIcons
+              name="radio-button-unchecked"
+              size={32}
               color={color}
             />
           ),
-          tabBarStyle: { display: 'none' }, // Hide from default tab bar
         }}
       />
       <Tabs.Screen
@@ -89,7 +82,7 @@ export default function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ focused, color }: any) => (
-            <MaterialSymbolsOutlined
+            <MaterialIcons
               name={focused ? 'person' : 'person-outline'}
               size={24}
               color={color}
@@ -107,7 +100,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingTop: 12,
     paddingBottom: 28,
-    paddingHorizontal: 4,
+    paddingHorizontal: 0,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     shadowColor: '#000',
@@ -122,6 +115,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: Dimensions.get('window').width / 3,
   },
   tabLabel: {
     fontSize: 10,
@@ -129,6 +123,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: 4,
+    marginTop: 6,
   },
 });

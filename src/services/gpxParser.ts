@@ -135,6 +135,16 @@ export async function parseGPX(gpxContent: string): Promise<ParsedActivity> {
   const duration = (Math.max(...timestamps) - Math.min(...timestamps)) / 1000;
   const avgSpeed = duration > 0 ? totalDistance / duration : 0;
 
+  // Calculate ACTIVE duration (sum of time intervals where speed > 0)
+  let activeDuration = 0;
+  const MOVEMENT_THRESHOLD_MS = 0.5; // Minimum speed to count as "active" (m/s)
+  for (let i = 1; i < points.length; i++) {
+    const dt = (points[i].timestamp.getTime() - points[i - 1].timestamp.getTime()) / 1000;
+    if (points[i].speed_ms > MOVEMENT_THRESHOLD_MS) {
+      activeDuration += dt;
+    }
+  }
+
   // Average HR (exclude nulls)
   const hrValues = points.map((p) => p.heart_rate).filter((hr): hr is number => hr !== null);
   const avgHr = hrValues.length > 0 ? Math.round(hrValues.reduce((a, b) => a + b, 0) / hrValues.length) : null;
@@ -146,7 +156,7 @@ export async function parseGPX(gpxContent: string): Promise<ParsedActivity> {
     stats: {
       distance_m: totalDistance,
       elevation_m: elevationGain,
-      duration_s: duration,
+      duration_s: activeDuration, // Use active duration instead of total elapsed time
       avg_speed_ms: avgSpeed,
       avg_hr: avgHr,
       started_at: points[0]?.timestamp || new Date(),

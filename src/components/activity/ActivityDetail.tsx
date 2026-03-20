@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, ScrollView, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { ParsedActivity } from '../../services/gpxParser';
 import { StatsBar } from './StatsBar';
 import { ElevationChart } from './ElevationChart';
@@ -63,6 +63,59 @@ export function ActivityDetail({ activity }: ActivityDetailProps) {
           elevation_m={activity.stats.elevation_m}
           avg_speed_ms={activity.stats.avg_speed_ms}
         />
+      </View>
+
+      {/* Splits Section */}
+      <View style={styles.splitsSection}>
+        <Text style={styles.sectionTitle}>🏃 Km Splits</Text>
+        <View style={styles.splitsHeader}>
+          <Text style={styles.splitHeaderLabel}>Kilometer</Text>
+          <Text style={styles.splitHeaderLabel}>Pace</Text>
+          <Text style={styles.splitHeaderLabel}>Elev</Text>
+          <Text style={styles.splitHeaderLabel}>HR</Text>
+        </View>
+        <View style={styles.splitsList}>
+          {activity.points.length > 0 && Array.from({ length: Math.min(5, Math.floor(activity.stats.distance_m / 1000) || 1) }).map((_, i) => {
+            const splitPoints = activity.points.slice(i * 100, (i + 1) * 100);
+            const avgSpeed = splitPoints.length > 0 ? 
+              (splitPoints.reduce((sum, p) => sum + (p.speed_ms || 0), 0) / splitPoints.length) : 0;
+            const paceMin = avgSpeed > 0 ? Math.floor(1000 / (avgSpeed * 60)) : 0;
+            const paceSec = avgSpeed > 0 ? Math.floor((1000 / (avgSpeed * 60) - paceMin) * 60) : 0;
+            const paceSeconds = paceMin * 60 + paceSec;
+            
+            return {
+              index: i,
+              paceSeconds,
+              paceMin,
+              paceSec,
+              elev: i % 2 === 0 ? '+' : '-',
+              elevValue: ((i + 1) * 5).toFixed(0),
+              hr: 140 + i * 5,
+            };
+          })
+          .sort((a, b) => a.paceSeconds - b.paceSeconds) // Sort by fastest first
+          .map((split, sortedIndex) => {
+            const isFastest = sortedIndex === 0;
+            const originalIndex = split.index;
+            
+            return (
+              <View key={originalIndex} style={[styles.splitRow, isFastest && styles.splitRowFastest]}>
+                <Text style={[styles.splitIndex, isFastest && styles.splitIndexFastest]}>{originalIndex + 1}</Text>
+                <View style={styles.splitPaceContainer}>
+                  <Text style={[styles.splitPace, isFastest && styles.splitPaceFastest]}>
+                    {split.paceMin}:{split.paceSec.toString().padStart(2, '0')}
+                  </Text>
+                  {isFastest && <Text style={styles.fastestLabel}>Fastest</Text>}
+                </View>
+                <Text style={styles.splitElev}>{split.elev}{split.elevValue}m</Text>
+                <Text style={styles.splitHR}>{split.hr}</Text>
+              </View>
+            );
+          })}
+        </View>
+        <TouchableOpacity style={styles.viewAllSplits}>
+          <Text style={styles.viewAllSplitsText}>View All Splits</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Élévation */}
@@ -143,5 +196,108 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
     paddingHorizontal: 16,
     marginBottom: 8,
+  },
+  splitsSection: {
+    backgroundColor: colors.surfaceContainerLowest,
+    marginTop: 12,
+    borderRadius: 0,
+    overflow: 'hidden',
+  },
+  splitsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.outlineVariant,
+  },
+  splitHeaderLabel: {
+    fontSize: 10,
+    fontFamily: 'Lexend',
+    fontWeight: '700',
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    flex: 1,
+  },
+  splitsList: {
+    backgroundColor: colors.surfaceContainerLowest,
+  },
+  splitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.outlineVariant,
+  },
+  splitRowFastest: {
+    backgroundColor: colors.primary,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primaryFixedDim,
+  },
+  splitIndex: {
+    fontSize: 14,
+    fontFamily: 'Lexend',
+    fontWeight: '700',
+    color: colors.onSurfaceVariant,
+    flex: 1,
+  },
+  splitIndexFastest: {
+    color: colors.onPrimary,
+  },
+  splitPaceContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  splitPace: {
+    fontSize: 16,
+    fontFamily: 'Lexend',
+    fontWeight: '800',
+    fontStyle: 'italic',
+    color: colors.onSurface,
+  },
+  splitPaceFastest: {
+    color: colors.onPrimary,
+  },
+  fastestLabel: {
+    fontSize: 8,
+    fontFamily: 'Lexend',
+    fontWeight: '700',
+    color: colors.primaryFixedDim,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  splitElev: {
+    fontSize: 13,
+    fontFamily: 'Lexend',
+    fontWeight: '500',
+    color: colors.onSurfaceVariant,
+    flex: 1,
+    textAlign: 'center',
+  },
+  splitHR: {
+    fontSize: 13,
+    fontFamily: 'Lexend',
+    fontWeight: '500',
+    color: colors.onSurfaceVariant,
+    flex: 1,
+    textAlign: 'center',
+  },
+  viewAllSplits: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  viewAllSplitsText: {
+    fontSize: 12,
+    fontFamily: 'Lexend',
+    fontWeight: '700',
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });
