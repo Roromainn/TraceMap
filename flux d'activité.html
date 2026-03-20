@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KINETIC | Activity Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary-fixed-variant": "#5c5b5b",
+              "on-secondary-container": "#525151",
+              "surface-tint": "#a93000",
+              "surface-container-high": "#e1e3e3",
+              "on-tertiary-container": "#53066a",
+              "outline-variant": "#acadad",
+              "surface": "#f6f6f6",
+              "secondary-container": "#e4e2e1",
+              "on-tertiary-fixed": "#2e003c",
+              "inverse-primary": "#ff571b",
+              "inverse-surface": "#0c0f0f",
+              "on-tertiary-fixed-variant": "#5d1573",
+              "on-primary-fixed": "#000000",
+              "primary-fixed-dim": "#ff5d26",
+              "surface-variant": "#dbdddd",
+              "tertiary": "#843d99",
+              "on-surface": "#2d2f2f",
+              "on-primary-container": "#470f00",
+              "on-primary-fixed-variant": "#571400",
+              "error-dim": "#9f0519",
+              "primary-fixed": "#ff784e",
+              "secondary-fixed-dim": "#d6d4d3",
+              "secondary-fixed": "#e4e2e1",
+              "surface-bright": "#f6f6f6",
+              "on-error": "#ffefee",
+              "secondary-dim": "#504f4f",
+              "secondary": "#5c5b5b",
+              "error": "#b31b25",
+              "tertiary-fixed": "#e293f6",
+              "background": "#f6f6f6",
+              "on-primary": "#ffefeb",
+              "surface-container-highest": "#dbdddd",
+              "tertiary-fixed-dim": "#d386e7",
+              "on-error-container": "#570008",
+              "primary-container": "#ff784e",
+              "on-secondary": "#f5f2f1",
+              "on-background": "#2d2f2f",
+              "surface-container": "#e7e8e8",
+              "error-container": "#fb5151",
+              "primary-dim": "#942900",
+              "on-secondary-fixed": "#3f3f3f",
+              "tertiary-dim": "#76308c",
+              "outline": "#767777",
+              "primary": "#a93000",
+              "tertiary-container": "#e293f6",
+              "on-surface-variant": "#5a5c5c",
+              "on-tertiary": "#ffeefd",
+              "inverse-on-surface": "#9c9d9d",
+              "surface-dim": "#d3d5d5",
+              "surface-container-low": "#f0f1f1",
+              "surface-container-lowest": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Lexend"],
+              "body": ["Plus Jakarta Sans"],
+              "label": ["Lexend"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .strava-gradient { background: linear-gradient(135deg, #a93000 0%, #ff784e 100%); }
+        .glass-header { backdrop-filter: blur(20px); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-neutral-50/80 dark:bg-neutral-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant active:scale-95 duration-150 cursor-pointer">menu</span>
+<h1 class="font-lexend font-black italic text-orange-600 dark:text-orange-500 tracking-tighter text-2xl">KINETIC</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant active:scale-95 duration-150 cursor-pointer">notifications</span>
+</div>
+</div>
+<div class="bg-neutral-100 dark:bg-neutral-800 h-[1px] opacity-20"></div>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto space-y-10">
+<!-- Page Title Editorial Section -->
+<section class="space-y-1">
+<p class="font-label text-primary font-bold tracking-widest text-[10px] uppercase">Weekly Performance</p>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight text-on-surface">Activity Feed</h2>
+</section>
+<!-- Bento Stats Grid (Summary) -->
+<section class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-6 rounded-xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.03)] flex flex-col justify-between aspect-square md:aspect-auto">
+<span class="material-symbols-outlined text-primary mb-4" data-icon="speed">speed</span>
+<div>
+<p class="font-headline text-3xl font-bold">12.4</p>
+<p class="font-label text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Avg Pace (km/h)</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary mb-4" data-icon="mountain_flag">mountain_flag</span>
+<div>
+<p class="font-headline text-3xl font-bold">1,420</p>
+<p class="font-label text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Elevation Gain (m)</p>
+</div>
+</div>
+</section>
+<!-- Feed Activities -->
+<div class="space-y-8">
+<!-- Activity Card 1: Running -->
+<article class="bg-surface-container-low rounded-[2rem] overflow-hidden">
+<div class="p-6 space-y-4">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border-2 border-primary-container">
+<img alt="Athlete profile" class="w-full h-full object-cover" data-alt="Portrait of an athletic male runner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvIr7HBXBSGdLmZ7g5OdQGGkQr9nX6yq7WG7-s5IixVhjKSPB2yhUAmWnZKqyqP6J6DtJUN39IiZpl5CmOIGuZHETzgbeq6vfjCAzKnaFh9a6Cemgtsrin9wMN0cm54tnQQMO4_CG8FsJMVo9ixNHcnE53C0kptaib0Q68Jt9KEayWPT1exjERIwCGny9SVlILrGWx3GBerkavd0gzMIysVk7u18wJp-4bSwoTXgwYKeW5Lzxfnvq3DqMdX26ewEql102W6-jg6MPm"/>
+</div>
+<div>
+<h3 class="font-headline text-lg font-bold leading-none">Morning Run</h3>
+<p class="font-body text-sm text-on-surface-variant mt-1">October 24, 2023</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary" data-icon="directions_run" style="font-variation-settings: 'FILL' 1;">directions_run</span>
+</div>
+<!-- Metrics Grid -->
+<div class="grid grid-cols-3 gap-2 bg-surface-container-lowest p-5 rounded-xl">
+<div class="text-center">
+<p class="font-headline text-xl font-extrabold text-on-surface">12.4</p>
+<p class="font-label text-[9px] font-bold text-on-surface-variant uppercase tracking-tighter">Distance (km)</p>
+</div>
+<div class="text-center border-x border-outline-variant/10">
+<p class="font-headline text-xl font-extrabold text-on-surface">0:58:20</p>
+<p class="font-label text-[9px] font-bold text-on-surface-variant uppercase tracking-tighter">Duration</p>
+</div>
+<div class="text-center">
+<p class="font-headline text-xl font-extrabold text-on-surface">112</p>
+<p class="font-label text-[9px] font-bold text-on-surface-variant uppercase tracking-tighter">Elevation (m)</p>
+</div>
+</div>
+</div>
+<!-- Map Thumbnail Overlay -->
+<div class="relative h-48 w-full bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover opacity-80" data-alt="Satellite view of city running route map" data-location="San Francisco" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4BNSZ7NUGIxEA-8rSLMof8d17SFf_pX0C1P8I1BkZA93aYHaKLEg_mbzZlKRQt2nMVPTt_TyfRJmsE5xgTE5xThyZ88nvqgdiOGyACtWUkbuQUyXyzRMo3oez6ciT7mQqquLZDE1d1-kWFU_UzDAogIOva6PZjhgw-FE5a59yLxOObo_Op2D7QVFWPjDVKhOoyK9hg2FsQg8MbPphEkXNBgzGkiRK23UOwIwagevPc3a-CcwxVHrvZpxK4bGHD5GNzII5MEUI5Akl"/>
+<div class="absolute inset-0 strava-gradient mix-blend-overlay opacity-20"></div>
+<div class="absolute bottom-4 left-6 bg-surface-container-lowest/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label text-[10px] font-black uppercase tracking-widest text-on-surface">Route Verified</span>
+</div>
+</div>
+</article>
+<!-- Activity Card 2: Cycling -->
+<article class="bg-surface-container-low rounded-[2rem] overflow-hidden">
+<div class="p-6 space-y-4">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border-2 border-primary-container">
+<img alt="Athlete profile" class="w-full h-full object-cover" data-alt="Portrait of an athletic male cyclist" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdwWXybQA4N-aNv1ik_3GW_kB3TIhw0rSKWa5tMQ_0Lyhz6jqF0JOIJHmcFabN5diImA4PuCVnComEkZs11MKSQ3efkPkIqWAgCbzPT7IKJuT08D9nI0AQNNkHkdFfCu9uF9wrOZeDiZTkxR_lYBs66d7Zo7GCzqMOcqilsJN4q1quoRAPmNnXgAyeR4a4ASB_hj9ww3TWMeWsw334a7XydwmAsXKbyKrr3wsn7h53S7c0Un3AMo6rt--UQ7wjdRqX8NuNdhw20gCP"/>
+</div>
+<div>
+<h3 class="font-headline text-lg font-bold leading-none">Evening Sprint</h3>
+<p class="font-body text-sm text-on-surface-variant mt-1">October 22, 2023</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary" data-icon="directions_bike" style="font-variation-settings: 'FILL' 1;">directions_bike</span>
+</div>
+<!-- Metrics Grid -->
+<div class="grid grid-cols-3 gap-2 bg-surface-container-lowest p-5 rounded-xl">
+<div class="text-center">
+<p class="font-headline text-xl font-extrabold text-on-surface">42.8</p>
+<p class="font-label text-[9px] font-bold text-on-surface-variant uppercase tracking-tighter">Distance (km)</p>
+</div>
+<div class="text-center border-x border-outline-variant/10">
+<p class="font-headline text-xl font-extrabold text-on-surface">1:45:12</p>
+<p class="font-label text-[9px] font-bold text-on-surface-variant uppercase tracking-tighter">Duration</p>
+</div>
+<div class="text-center">
+<p class="font-headline text-xl font-extrabold text-on-surface">845</p>
+<p class="font-label text-[9px] font-bold text-on-surface-variant uppercase tracking-tighter">Elevation (m)</p>
+</div>
+</div>
+</div>
+<!-- Map Thumbnail Overlay -->
+<div class="relative h-48 w-full bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover opacity-80" data-alt="Topographic map of mountain bike trail" data-location="Boulder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEYp2TTsqUldGyaVt4yBBhguKbx4OK3Li9iXjlVb7mYyUEHI07Yqpih2AwDjqzW5R12J3IbZ7YHxImu-jUn0ffAmfJ1Jz4ahwh5zqMZahrr7oexf1_IYcoKy2TKKhPbfFopMFu3RZu-5vM8RdOHg9yHX86ARIM7w0w6T_GKaetmomBLVjMdjYY89XsluDt97bOgViWOZAy2SH7yImDkjRt_XvufzfWqIJgxOpC1addBXNqGsqtZbwsuyw2g7_JiL_hg2qeamvzFeaa"/>
+<div class="absolute inset-0 strava-gradient mix-blend-overlay opacity-20"></div>
+<div class="absolute bottom-4 left-6 bg-surface-container-lowest/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-label text-[10px] font-black uppercase tracking-widest text-on-surface">Epic Ascent</span>
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- Floating Action Button (Contextual for Record) -->
+<button class="fixed bottom-28 right-6 w-16 h-16 rounded-full strava-gradient flex items-center justify-center text-white shadow-xl active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center pt-3 pb-8 px-4 bg-white/90 dark:bg-neutral-950/90 backdrop-blur-xl rounded-t-[2rem] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] border-t border-neutral-100 dark:border-neutral-800">
+<!-- Feed Tab (Active) -->
+<a class="flex flex-col items-center justify-center text-orange-600 dark:text-orange-400 scale-110 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="explore" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-lexend text-[10px] font-semibold uppercase tracking-widest mt-1">Feed</span>
+</a>
+<!-- Record Tab (Inactive) -->
+<a class="flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-600 hover:text-orange-500 dark:hover:text-orange-300 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="circle">circle</span>
+<span class="font-lexend text-[10px] font-semibold uppercase tracking-widest mt-1">Record</span>
+</a>
+<!-- Profile Tab (Inactive) -->
+<a class="flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-600 hover:text-orange-500 dark:hover:text-orange-300 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-lexend text-[10px] font-semibold uppercase tracking-widest mt-1">Profile</span>
+</a>
+</nav>
+</body></html>
