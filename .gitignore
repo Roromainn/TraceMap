@@ -1,0 +1,64 @@
+```
+# Dependencies
+node_modules/
+
+# Build artifacts
+android/app/build/
+android/build/intermediates/
+android/build/outputs/
+build/
+dist/
+target/
+
+# Environment variables
+.env.local
+.env.*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Gradle
+.gradle/
+.gradle/
+!android/.gradle/
+!android/gradle/
+
+# Android specific
+*.keystore
+!android/app/debug.keystore
+
+# React Native
+metro-cache/
+.rncache/
+
+# Expo
+.expo/
+.expo-shared/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+```

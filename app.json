@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "TraceMap",
+    "slug": "tracemap",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "tracemap",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tracemap.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "TraceMap needs GPS to track your activities",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "TraceMap tracks your workout even in background",
+        "UIBackgroundModes": ["location"]
+      }
+    },
+    "android": {
+      "package": "com.tracemap.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow TraceMap to access your Face ID biometric data."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "TraceMap tracks your workout even in background",
+          "locationWhenInUsePermission": "TraceMap needs GPS to track your activities",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "95a7701b-ce0c-4267-b65e-5b459870de84"
+      }
+    }
+  }
+}

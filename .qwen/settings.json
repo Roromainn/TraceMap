@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(type *)",
+      "Bash(findstr *)",
+      "Bash(select-object *)",
+      "Bash(npm install *)",
+      "Bash(select-string *)",
+      "Bash(powershell *)",
+      "Bash(out-file *)",
+      "Bash(npx *)",
+      "Bash(exist *)",
+      "Bash(mkdir *)",
+      "Bash(echo *)",
+      "Bash(echo.)",
+      "Bash(tasklist)",
+      "Bash(timeout *)",
+      "Bash(adb *)",
+      "Bash(taskkill *)"
+    ]
+  },
+  "$version": 3
+}
