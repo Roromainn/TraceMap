@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert, TextInput, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRecordingStore } from '../../stores/recordingStore';
 import { useToast } from '../../contexts/ToastContext';
 import { useMapStore } from '../../stores/mapStore';
+import { createActivity } from '../../services/activities';
 import { TerrainMap } from '../../components/map/TerrainMap';
 import { colors } from '../../utils/colors';
 import { LineString } from 'geojson';
@@ -37,19 +38,16 @@ export default function RecordScreen() {
   const [activityName, setActivityName] = useState('');
   const [selectedType, setSelectedType] = useState<'run' | 'ride' | 'hike' | 'other'>('run');
 
-  // Format time
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
-    
     if (h > 0) {
       return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Get current stats
   const stats = session ? {
     distance: session.totalDistance,
     elevation: session.totalElevation,
@@ -59,7 +57,6 @@ export default function RecordScreen() {
   const distanceKm = stats ? (stats.distance / 1000).toFixed(2) : '0.00';
   const elevationM = stats ? stats.elevation.toFixed(0) : '0';
   
-  // Calculate pace
   const pace = stats && elapsedSeconds > 0 && stats.distance > 0
     ? (elapsedSeconds / (stats.distance / 1000)) / 60
     : 0;
@@ -67,7 +64,6 @@ export default function RecordScreen() {
   const paceSec = Math.floor((pace - paceMin) * 60);
   const paceStr = paceMin > 0 ? `${paceMin}:${paceSec.toString().padStart(2, '0')}` : '--:--';
 
-  // Create map trace for preview
   const mapTrace = stats && stats.points.length > 0 ? {
     type: 'LineString' as const,
     coordinates: stats.points.map((p) => [p.lng, p.lat, p.altitude_m]),
@@ -116,7 +112,6 @@ export default function RecordScreen() {
 
       const title = activityName.trim() || `${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} - ${new Date().toLocaleDateString()}`;
       
-      // Create activity from session
       const activity = {
         trace: {
           type: 'LineString' as const,
@@ -134,7 +129,7 @@ export default function RecordScreen() {
         points: session.points,
       };
 
-      await addActivity(activity, title);
+      await createActivity(activity, 'recording');
       showSuccess('Activity saved successfully!');
       setShowSummary(false);
       cancelRecording();
@@ -163,7 +158,6 @@ export default function RecordScreen() {
     );
   };
 
-  // IDLE state - Select activity type
   if (status === 'idle') {
     return (
       <View style={styles.container}>
@@ -219,7 +213,6 @@ export default function RecordScreen() {
     );
   }
 
-  // TRACKING/PAUSED state
   return (
     <>
       <View style={styles.container}>
@@ -243,7 +236,6 @@ export default function RecordScreen() {
           <View style={{ width: 24 }} />
         </View>
 
-        {/* Map Preview */}
         <View style={styles.mapContainer}>
           {mapTrace && mapBounds ? (
             <TerrainMap traces={[mapTrace]} bounds={mapBounds} enable3D={false} />
@@ -255,12 +247,10 @@ export default function RecordScreen() {
           )}
         </View>
 
-        {/* Timer */}
         <View style={styles.timerContainer}>
           <Text style={styles.timer}>{formatTime(elapsedSeconds)}</Text>
         </View>
 
-        {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{distanceKm}</Text>
@@ -276,7 +266,6 @@ export default function RecordScreen() {
           </View>
         </View>
 
-        {/* Status */}
         <View style={styles.statusContainer}>
           <View style={styles.statusDot} />
           <Text style={styles.statusText}>
@@ -284,7 +273,6 @@ export default function RecordScreen() {
           </Text>
         </View>
 
-        {/* Controls */}
         <View style={styles.controls}>
           {status === 'paused' ? (
             <TouchableOpacity style={[styles.controlButton, styles.resumeButton]} onPress={resumeRecording}>
@@ -302,7 +290,6 @@ export default function RecordScreen() {
         </View>
       </View>
 
-      {/* Summary Modal */}
       <Modal visible={showSummary} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -314,18 +301,16 @@ export default function RecordScreen() {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              {/* Map Preview */}
               {mapTrace && mapBounds && (
                 <View style={styles.modalMapContainer}>
                   <TerrainMap traces={[mapTrace]} bounds={mapBounds} enable3D={false} />
                 </View>
               )}
 
-              {/* Activity Name */}
               <Text style={styles.sectionLabel}>Activity Name</Text>
               <View style={styles.nameInputContainer}>
                 <MaterialIcons name="edit" size={20} color={colors.outline} />
-                <input
+                <TextInput
                   style={styles.nameInput}
                   placeholder="e.g., Morning Run, Evening Ride..."
                   value={activityName}
@@ -334,7 +319,6 @@ export default function RecordScreen() {
                 />
               </View>
 
-              {/* Stats */}
               <View style={styles.summaryStats}>
                 <View style={styles.summaryStat}>
                   <Text style={styles.summaryStatValue}>{distanceKm}</Text>
@@ -375,331 +359,55 @@ export default function RecordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 16,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
-  },
-  logo: {
-    fontSize: 24,
-    fontFamily: 'Lexend',
-    fontWeight: '900',
-    fontStyle: 'italic',
-    color: colors.primary,
-    letterSpacing: -1,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: colors.onSurface,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: 'Lexend',
-    fontWeight: '900',
-    color: colors.onSurface,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: 'Lexend',
-    fontWeight: '500',
-    color: colors.onSurfaceVariant,
-    marginBottom: 32,
-  },
-  typeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginBottom: 32,
-  },
-  typeOption: {
-    width: '48%',
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 3,
-    borderColor: 'transparent',
-  },
-  typeOptionSelected: {
-    backgroundColor: colors.primaryContainer,
-  },
-  typeLabel: {
-    fontSize: 15,
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: colors.onSurfaceVariant,
-  },
-  startButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 20,
-    borderRadius: 28,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  startButtonText: {
-    fontSize: 18,
-    fontFamily: 'Lexend',
-    fontWeight: '800',
-    color: colors.white,
-  },
-  mapContainer: {
-    height: 200,
-    width: '100%',
-    backgroundColor: colors.surfaceContainerLow,
-  },
-  mapPlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  mapPlaceholderText: {
-    fontSize: 14,
-    fontFamily: 'Lexend',
-    fontWeight: '600',
-    color: colors.outline,
-    marginTop: 8,
-  },
-  timerContainer: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    backgroundColor: colors.white,
-  },
-  timer: {
-    fontSize: 64,
-    fontFamily: 'Lexend',
-    fontWeight: '900',
-    color: colors.onSurface,
-    fontVariant: ['tabular-nums'],
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    marginHorizontal: 16,
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  statBox: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statBorder: {
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: colors.outlineVariant,
-  },
-  statValue: {
-    fontSize: 24,
-    fontFamily: 'Lexend',
-    fontWeight: '800',
-    color: colors.onSurface,
-  },
-  statLabel: {
-    fontSize: 11,
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 4,
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 16,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-  statusText: {
-    fontSize: 13,
-    fontFamily: 'Lexend',
-    fontWeight: '600',
-    color: colors.onSurfaceVariant,
-  },
-  controls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 32,
-    padding: 32,
-  },
-  controlButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  pauseButton: {
-    backgroundColor: colors.primary,
-  },
-  resumeButton: {
-    backgroundColor: colors.primary,
-  },
-  stopButton: {
-    backgroundColor: colors.error,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    maxHeight: '85%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontFamily: 'Lexend',
-    fontWeight: '800',
-    color: colors.onSurface,
-  },
-  modalBody: {
-    padding: 24,
-  },
-  modalMapContainer: {
-    height: 200,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 24,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  nameInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    marginBottom: 24,
-    gap: 12,
-  },
-  nameInput: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: 'Lexend',
-    fontWeight: '500',
-    color: colors.onSurface,
-  },
-  summaryStats: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  summaryStat: {
-    width: '48%',
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-  },
-  summaryStatValue: {
-    fontSize: 24,
-    fontFamily: 'Lexend',
-    fontWeight: '800',
-    color: colors.onSurface,
-  },
-  summaryStatLabel: {
-    fontSize: 10,
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 4,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 24,
-    borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
-  },
-  modalButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  discardButton: {
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  discardButtonText: {
-    fontSize: 15,
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: colors.onSurfaceVariant,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-  },
-  saveButtonText: {
-    fontSize: 15,
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: colors.white,
-  },
+  container: { flex: 1, backgroundColor: colors.surface },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 50, paddingBottom: 16, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.outlineVariant },
+  logo: { fontSize: 24, fontFamily: 'Lexend', fontWeight: '900', fontStyle: 'italic', color: colors.primary, letterSpacing: -1 },
+  headerTitle: { fontSize: 17, fontFamily: 'Lexend', fontWeight: '700', color: colors.onSurface },
+  content: { flex: 1 },
+  contentContainer: { padding: 24 },
+  title: { fontSize: 32, fontFamily: 'Lexend', fontWeight: '900', color: colors.onSurface, marginBottom: 8 },
+  subtitle: { fontSize: 16, fontFamily: 'Lexend', fontWeight: '500', color: colors.onSurfaceVariant, marginBottom: 32 },
+  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 32 },
+  typeOption: { width: '48%', backgroundColor: colors.surfaceContainerLow, borderRadius: 20, padding: 24, alignItems: 'center', gap: 12, borderWidth: 3, borderColor: 'transparent' },
+  typeOptionSelected: { backgroundColor: colors.primaryContainer },
+  typeLabel: { fontSize: 15, fontFamily: 'Lexend', fontWeight: '700', color: colors.onSurfaceVariant },
+  startButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 20, borderRadius: 28, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 6 },
+  startButtonText: { fontSize: 18, fontFamily: 'Lexend', fontWeight: '800', color: colors.white },
+  mapContainer: { height: 200, width: '100%', backgroundColor: colors.surfaceContainerLow },
+  mapPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceContainerHigh },
+  mapPlaceholderText: { fontSize: 14, fontFamily: 'Lexend', fontWeight: '600', color: colors.outline, marginTop: 8 },
+  timerContainer: { alignItems: 'center', paddingVertical: 24, backgroundColor: colors.white },
+  timer: { fontSize: 64, fontFamily: 'Lexend', fontWeight: '900', color: colors.onSurface, fontVariant: ['tabular-nums'] },
+  statsGrid: { flexDirection: 'row', backgroundColor: colors.white, marginHorizontal: 16, borderRadius: 20, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  statBox: { flex: 1, alignItems: 'center' },
+  statBorder: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: colors.outlineVariant },
+  statValue: { fontSize: 24, fontFamily: 'Lexend', fontWeight: '800', color: colors.onSurface },
+  statLabel: { fontSize: 11, fontFamily: 'Lexend', fontWeight: '700', color: colors.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 },
+  statusContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
+  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
+  statusText: { fontSize: 13, fontFamily: 'Lexend', fontWeight: '600', color: colors.onSurfaceVariant },
+  controls: { flexDirection: 'row', justifyContent: 'center', gap: 32, padding: 32 },
+  controlButton: { width: 72, height: 72, borderRadius: 36, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 },
+  pauseButton: { backgroundColor: colors.primary },
+  resumeButton: { backgroundColor: colors.primary },
+  stopButton: { backgroundColor: colors.error },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: colors.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, maxHeight: '85%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24, borderBottomWidth: 1, borderBottomColor: colors.outlineVariant },
+  modalTitle: { fontSize: 20, fontFamily: 'Lexend', fontWeight: '800', color: colors.onSurface },
+  modalBody: { padding: 24 },
+  modalMapContainer: { height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 24 },
+  sectionLabel: { fontSize: 12, fontFamily: 'Lexend', fontWeight: '700', color: colors.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  nameInputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceContainerLowest, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: colors.outlineVariant, marginBottom: 24, gap: 12 },
+  nameInput: { flex: 1, fontSize: 16, fontFamily: 'Lexend', fontWeight: '500', color: colors.onSurface },
+  summaryStats: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  summaryStat: { width: '48%', backgroundColor: colors.surfaceContainerLow, borderRadius: 16, padding: 16, alignItems: 'center' },
+  summaryStatValue: { fontSize: 24, fontFamily: 'Lexend', fontWeight: '800', color: colors.onSurface },
+  summaryStatLabel: { fontSize: 10, fontFamily: 'Lexend', fontWeight: '700', color: colors.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 },
+  modalFooter: { flexDirection: 'row', gap: 12, padding: 24, borderTopWidth: 1, borderTopColor: colors.outlineVariant },
+  modalButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 16 },
+  discardButton: { backgroundColor: colors.surfaceContainerHigh },
+  discardButtonText: { fontSize: 15, fontFamily: 'Lexend', fontWeight: '700', color: colors.onSurfaceVariant },
+  saveButton: { backgroundColor: colors.primary },
+  saveButtonText: { fontSize: 15, fontFamily: 'Lexend', fontWeight: '700', color: colors.white },
 });

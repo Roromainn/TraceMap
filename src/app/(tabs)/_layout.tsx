@@ -57,9 +57,10 @@ export default function TabsLayout() {
           title: 'Feed',
           tabBarIcon: ({ focused, color }: any) => (
             <MaterialIcons
-              name={focused ? 'explore' : 'explore-outline'}
+              name={focused ? 'explore' : 'explore'}
               size={24}
               color={color}
+              style={{ opacity: focused ? 1 : 0.6 }}
             />
           ),
         }}
@@ -83,9 +84,10 @@ export default function TabsLayout() {
           title: 'Profile',
           tabBarIcon: ({ focused, color }: any) => (
             <MaterialIcons
-              name={focused ? 'person' : 'person-outline'}
+              name={focused ? 'person' : 'person'}
               size={24}
               color={color}
+              style={{ opacity: focused ? 1 : 0.6 }}
             />
           ),
         }}

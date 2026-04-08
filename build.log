@@ -1,0 +1,7 @@
+› Opening emulator Medium_Phone_API_36.1
+Error: The emulator (Medium_Phone_API_36.1) quit before it finished opening. You can try starting the emulator manually from the terminal with: C:\Users\romai\AppData\Local\Android\Sdk/emulator/emulator @Medium_Phone_API_36.1
+Error: The emulator (Medium_Phone_API_36.1) quit before it finished opening. You can try starting the emulator manually from the terminal with: C:\Users\romai\AppData\Local\Android\Sdk/emulator/emulator @Medium_Phone_API_36.1
+    at stopWaitingAndReject (C:\Users\romai\Desktop\Proj\node_modules\@expo\cli\build\src\start\platforms\android\emulator.js:160:20)
+    at ChildProcess.<anonymous> (C:\Users\romai\Desktop\Proj\node_modules\@expo\cli\build\src\start\platforms\android\emulator.js:170:13)
+    at ChildProcess.emit (node:events:508:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:294:12)

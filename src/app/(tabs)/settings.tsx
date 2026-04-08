@@ -6,6 +6,7 @@ import { SpeedUnit, SPEED_UNIT_LABELS } from '../../utils/units';
 import { colors } from '../../utils/colors';
 import { useRouter } from 'expo-router';
 import { useToast } from '../../contexts/ToastContext';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const SPEED_OPTIONS: { value: SpeedUnit; label: string; description: string }[] = [
   { value: 'min_km',   label: 'min/km',  description: 'Allure (course à pied, rando)' },

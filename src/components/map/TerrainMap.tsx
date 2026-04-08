@@ -48,7 +48,9 @@ export function TerrainMap({ traces = [], bounds, enable3D = false }: TerrainMap
         />
       )}
       {/* Render all traces with different colors and unique IDs */}
-      {traces.map((trace, index) => {
+      {traces
+        .filter((trace) => trace.coordinates.length >= 2) // Filter invalid traces
+        .map((trace, index) => {
         // Different colors for each trace
         const traceColors = [
           '#F97316', // Orange (1ère activité)

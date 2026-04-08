@@ -5,8 +5,6 @@ import { useMapStore } from '../../stores/mapStore';
 import { useToast } from '../../contexts/ToastContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../../utils/colors';
-import { TerrainMap } from '../../components/map/TerrainMap';
-import { LineString } from 'geojson';
 
 export default function FeedScreen() {
   const { activities, setSelectedActivity, refresh } = useMapStore();
@@ -57,30 +55,13 @@ export default function FeedScreen() {
     }
   };
 
-  // Create map trace for thumbnail
-  const createMapTrace = (activity: any): { trace: LineString; bounds: any } | null => {
-    if (!activity.points || activity.points.length === 0) return null;
-    
-    const trace: LineString = {
-      type: 'LineString',
-      coordinates: activity.points.map((p: any) => [p.lng, p.lat, p.altitude_m]),
-    };
-
-    const lngs = activity.points.map((p: any) => p.lng);
-    const lats = activity.points.map((p: any) => p.lat);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const padding = 0.005;
-
-    return {
-      trace,
-      bounds: {
-        ne: [maxLng + padding, maxLat + padding] as [number, number],
-        sw: [minLng - padding, minLat - padding] as [number, number],
-      },
-    };
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'run': return '#F97316';
+      case 'ride': return '#3B82F6';
+      case 'hike': return '#10B981';
+      default: return '#8B5CF6';
+    }
   };
 
   // Stats summary
@@ -164,33 +145,16 @@ export default function FeedScreen() {
               </View>
             </View>
 
-            {/* Map Thumbnail */}
-            <View style={styles.mapThumbnailContainer}>
-              {(() => {
-                const mapData = createMapTrace(item);
-                if (mapData) {
-                  return (
-                    <View style={styles.mapThumbnail}>
-                      <TerrainMap
-                        traces={[mapData.trace]}
-                        bounds={mapData.bounds}
-                        enable3D={false}
-                      />
-                      <View style={styles.gradientOverlay} />
-                      <View style={styles.badge}>
-                        <View style={styles.badgeDot} />
-                        <Text style={styles.badgeText}>Route Verified</Text>
-                      </View>
-                    </View>
-                  );
-                }
-                return (
-                  <View style={[styles.mapThumbnail, styles.mapPlaceholder]}>
-                    <MaterialIcons name="map" size={48} color={colors.outline} />
-                    <Text style={styles.placeholderText}>No GPS Data</Text>
-                  </View>
-                );
-              })()}
+            {/* Map Thumbnail - Colored gradient card */}
+            <View style={[styles.mapThumbnail, { backgroundColor: getActivityColor(item.stats.type) }]}>
+              <View style={styles.gradientOverlay} />
+              <View style={styles.thumbnailContent}>
+                <MaterialIcons name={getActivityIcon(item.stats.type)} size={48} color={colors.white} style={{ opacity: 0.3 }} />
+              </View>
+              <View style={styles.badge}>
+                <View style={styles.badgeDot} />
+                <Text style={styles.badgeText}>{item.stats.type.toUpperCase()}</Text>
+              </View>
             </View>
           </TouchableOpacity>
         )}
@@ -398,33 +362,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textAlign: 'center',
   },
-  mapThumbnailContainer: {
+  mapThumbnail: {
     height: 192,
-    marginTop: 16,
     borderRadius: 24,
     overflow: 'hidden',
     marginHorizontal: 20,
   },
-  mapThumbnail: {
-    height: 192,
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  mapPlaceholder: {
+  thumbnailContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerHighest,
-  },
-  placeholderText: {
-    fontSize: 14,
-    fontFamily: 'Lexend',
-    fontWeight: '600',
-    color: colors.outline,
-    marginTop: 8,
   },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.primary,
-    opacity: 0.2,
+    backgroundColor: '#000',
+    opacity: 0.15,
   },
   badge: {
     position: 'absolute',

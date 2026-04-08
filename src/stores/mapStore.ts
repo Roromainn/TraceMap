@@ -125,8 +125,11 @@ export const useMapStore = create<MapState>((set, get) => ({
     try {
       const { getActivities } = await import('../services/activities');
       const activities = await getActivities(user.id);
-      
+
       console.log('[MapStore] Loaded', activities.length, 'activities from Supabase');
+      if (activities.length > 0) {
+        console.log('[MapStore] First activity has', activities[0].activity_points?.length || 0, 'points');
+      }
       
       // Convert to StoredActivity format with points
       const storedActivities = activities.map((a) => ({
