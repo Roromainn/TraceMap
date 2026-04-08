@@ -102,6 +102,70 @@ export async function createActivity(
 }
 
 /**
+ * Create an activity from raw GPX data (with optional file metadata).
+ * This is a wrapper around createActivity that also records GPX metadata
+ * (filename/path) when available. Returns the new activity ID.
+ */
+export async function createActivityFromGPX(
+  userId: string,
+  activity: ParsedActivity,
+  meta?: { title?: string; rawGpxContent?: string; fileName?: string }
+): Promise<string> {
+  // Ensure we have a sane title when provided via meta
+  const title = meta?.title || `${activity.stats.type} - ${new Date(activity.stats.started_at).toLocaleDateString()}`;
+  // Insert activity record (GPX import as default source)
+  const { data, error } = await supabase
+    .from('activities')
+    .insert({
+      user_id: userId,
+      title,
+      type: activity.stats.type,
+      started_at: activity.stats.started_at.toISOString(),
+      duration_s: activity.stats.duration_s,
+      distance_m: activity.stats.distance_m,
+      elevation_m: activity.stats.elevation_m,
+      avg_speed_ms: activity.stats.avg_speed_ms,
+      avg_hr: activity.stats.avg_hr,
+      source: 'gpx_import',
+      raw_file_path: meta?.fileName ?? null,
+    })
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error('[Activities] createActivityFromGPX error:', error);
+    throw error ?? new Error('Failed to create activity from GPX');
+  }
+
+  // Insert points if present
+  if (Array.isArray(activity.points) && activity.points.length > 0) {
+    const pointsData = activity.points.map((p, index) => ({
+      activity_id: data.id,
+      seq: index,
+      lat: p.lat,
+      lng: p.lng,
+      altitude_m: p.altitude_m || 0,
+      speed_ms: p.speed_ms || 0,
+      heart_rate: p.heart_rate,
+      timestamp: p.timestamp.toISOString(),
+    }));
+
+    const batchSize = 1000;
+    for (let i = 0; i < pointsData.length; i += batchSize) {
+      const batch = pointsData.slice(i, i + batchSize);
+      const { error: pointsError } = await supabase
+        .from('activity_points')
+        .insert(batch);
+      if (pointsError) {
+        console.error('[Activities] Points insert error (GPX):', pointsError);
+      }
+    }
+  }
+
+  return data.id;
+}
+
+/**
  * Get all activities for current user with their points
  */
 export async function getActivities(options: {

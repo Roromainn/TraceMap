@@ -5,6 +5,8 @@ const GARMIN_CONSUMER_SECRET = 'YOUR_GARMIN_CONSUMER_SECRET';
 const GARMIN_BASE_URL = 'https://connect.garmin.com';
 const GARMIN_API_URL = 'https://api.garmin.com';
 
+import { GARMIN_ENABLED } from '../config/garminConfig';
+
 // OAuth endpoints
 const GARMIN_OAUTH_REQUEST_TOKEN_URL = 'https://connectapi.garmin.com/oauth/oauth/request_token';
 const GARMIN_OAUTH_AUTHORIZE_URL = 'https://connect.garmin.com/oauthConfirm';
@@ -60,6 +62,8 @@ class GarminAuthService {
 
   /**
    * Start OAuth 1.0a flow with Garmin Connect
+   * This is a placeholder until a proper backend proxy is available.
+   * If Garmin integration is disabled, return a clear error message.
    */
   async authenticate(): Promise<{
     authenticated: boolean;
@@ -67,9 +71,16 @@ class GarminAuthService {
     error?: string;
   }> {
     try {
+      // Garmin integration guarded behind a feature flag.
+      if (!GARMIN_ENABLED) {
+        return {
+          authenticated: false,
+          error: 'Garmin integration is disabled in this environment. Enable GARMIN_ENABLED to use it.',
+        };
+      }
+
       // For now, this is a placeholder - full OAuth requires backend proxy
       console.warn('[GarminAuth] Full OAuth flow requires backend proxy. Using manual token flow.');
-      
       // TODO: Implement proper OAuth flow with backend proxy
       // For now, return a placeholder
       return {

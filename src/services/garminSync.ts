@@ -1,4 +1,5 @@
 import { garminAuthService, GarminTokens } from './garminAuth';
+import { GARMIN_ENABLED } from '../config/garminConfig';
 import { fitParser } from './fitParser';
 import { createActivityFromFIT, createActivityFromGPX } from './activities';
 import { supabase } from './supabase';
@@ -24,6 +25,13 @@ class GarminSyncService {
    * Check if Garmin is connected
    */
   async getConnectionState(): Promise<GarminSyncState> {
+    // If Garmin integration is disabled, report as not connected
+    if (!GARMIN_ENABLED) {
+      return {
+        isConnected: false,
+        syncedActivitiesCount: 0,
+      };
+    }
     try {
       // Try to get tokens from secure storage
       const storedTokens = await this.getStoredTokens();
@@ -77,6 +85,10 @@ class GarminSyncService {
     error?: string;
   }> {
     try {
+      // If Garmin integration is disabled, short-circuit
+      if (!GARMIN_ENABLED) {
+        return { success: false, error: 'Garmin integration is disabled' };
+      }
       // Start OAuth flow
       const result = await garminAuthService.authenticate();
       
@@ -135,6 +147,10 @@ class GarminSyncService {
     synced: number;
     error?: string;
   }> {
+    // Short-circuit when Garmin is disabled
+    if (!GARMIN_ENABLED) {
+      return { success: false, synced: 0, error: 'Garmin integration is disabled' };
+    }
     const { limit = 20, force = false } = options;
 
     try {

@@ -191,11 +191,12 @@ export default function FeedScreen() {
       />
 
       {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={styles.fab} 
-        activeOpacity={0.8}
-        onPress={handleAddPress}
-      >
+    <TouchableOpacity 
+      testID="fab-add"
+      style={styles.fab} 
+      activeOpacity={0.8}
+      onPress={handleAddPress}
+    >
         <MaterialIcons name="add" size={28} color={colors.white} />
       </TouchableOpacity>
     </View>
